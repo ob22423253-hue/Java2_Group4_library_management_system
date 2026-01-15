@@ -1,0 +1,56 @@
+package com.university.universitylibrarysystem.service.impl;
+
+import com.university.universitylibrarysystem.entity.Course;
+import com.university.universitylibrarysystem.repository.CourseRepository;
+import com.university.universitylibrarysystem.service.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service  // ✅ This tells Spring to create a bean automatically
+public class CourseServiceImpl implements CourseService {
+
+    private final CourseRepository courseRepository;
+
+    @Autowired
+    public CourseServiceImpl(CourseRepository courseRepository) {
+        this.courseRepository = courseRepository;
+    }
+
+    @Override
+    public Course createCourse(Course course) {
+        return courseRepository.save(course);
+    }
+
+    @Override
+    public Course updateCourse(Long id, Course course) {
+        Course existing = courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found with id " + id));
+        existing.setName(course.getName());
+        
+        existing.setDepartment(course.getDepartment());
+        return courseRepository.save(existing);
+    }
+
+    @Override
+    public void deleteCourse(Long id) {
+        courseRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
+
+    @Override
+    public Optional<Course> getCourseById(Long id) {
+        return courseRepository.findById(id);
+    }
+
+    @Override
+    public List<Course> getCoursesByDepartment(Long departmentId) {
+        return courseRepository.findByDepartmentId(departmentId);
+    }
+}

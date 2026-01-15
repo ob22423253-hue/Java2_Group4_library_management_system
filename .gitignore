@@ -1,0 +1,57 @@
+# =========================
+# Gradle / Java / Build
+# =========================
+.gradle/
+gradle-8.14.3/
+build/
+bin/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# =========================
+# IDEs
+# =========================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# VS Code
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# =========================
+# Node / Frontend
+# =========================
+frontend/node_modules/
+
+# =========================
+# Runtime / Logs / Uploads
+# =========================
+uploads/
+bootrun.log/
+
+# =========================
+# GitHub / Extra
+# =========================
+.github/
