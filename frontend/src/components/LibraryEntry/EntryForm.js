@@ -1,37 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../../AuthContext';
 import libraryEntryService from '../../services/libraryEntryService';
+import QrReader from 'react-qr-reader';
 
 export default function EntryForm() {
+  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
-  const [scanType, setScanType] = useState('ENTRY');
+  const [scanResult, setScanResult] = useState('');
 
-  async function send() {
-    setLoading(true);
-    setMessage(null);
-    try {
-      const payload = { qrValue: scanType === 'ENTRY' ? 'LIBRARY_ENTRY' : 'LIBRARY_EXIT', scanType };
-      const res = await libraryEntryService.sendScan(payload);
-      setMessage({ type: res.success ? 'success' : 'error', text: res.message || 'Scan sent' });
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Failed to send scan' });
-    } finally { setLoading(false); }
-  }
+  const handleScan = async (data) => {
+    if (data) {
+      setScanResult(data);
+      setLoading(true);
+      setMessage(null);
+      try {
+        const payload = { qrValue: data, studentId: user.id };
+        const res = await libraryEntryService.sendScan(payload);
+        setMessage({ type: res.success ? 'success' : 'error', text: res.message || 'Scan sent' });
+      } catch (err) {
+        setMessage({ type: 'error', text: err.message || 'Failed to send scan' });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleError = (err) => {
+    console.error(err);
+    setMessage({ type: 'error', text: 'QR Scan Error' });
+  };
 
   return (
-    <div style={{padding:20}}>
+    <div style={{ padding: 20 }}>
       <h2>Library Scan</h2>
-      <div>
-        <label style={{marginRight:8}}>Type:</label>
-        <select value={scanType} onChange={e => setScanType(e.target.value)}>
-          <option value="ENTRY">Entry</option>
-          <option value="EXIT">Exit</option>
-        </select>
+      <div style={{ marginBottom: 20 }}>
+        <QrReader
+          delay={300}
+          onError={handleError}
+          onScan={handleScan}
+          style={{ width: '100%' }}
+        />
       </div>
-      <div style={{marginTop:12}}>
-        <button onClick={send} disabled={loading}>{loading ? 'Sending...' : 'Send Scan'}</button>
-      </div>
-      {message && <div style={{marginTop:12,color: message.type==='error' ? 'crimson':'green'}}>{message.text}</div>}
+      {scanResult && <p>Scanned QR: {scanResult}</p>}
+      {loading && <p>Sending scan...</p>}
+      {message && <p style={{ color: message.type === 'error' ? 'crimson' : 'green' }}>{message.text}</p>}
     </div>
   );
 }
