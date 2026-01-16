@@ -1,11 +1,9 @@
+// src/services/librarianService.js
 const API_BASE = '/api/v1/librarian/scans';
 
 async function parseRes(res) {
   const text = await res.text();
-  let body = null;
-  if (text && text.length) {
-    try { body = JSON.parse(text); } catch (e) { body = { message: text }; }
-  }
+  let body = text ? JSON.parse(text) : null;
   if (!res.ok) {
     const err = (body && body.message) || res.statusText || 'Request failed';
     throw new Error(err);
@@ -13,14 +11,15 @@ async function parseRes(res) {
   return body;
 }
 
-export async function getCurrentlyInside() {
+function getAuthHeaders() {
   const token = localStorage.getItem('token');
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
+export async function getCurrentlyInside() {
   const res = await fetch(API_BASE, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': 'Bearer ' + token } : {})
-    }
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
   });
   return parseRes(res);
 }

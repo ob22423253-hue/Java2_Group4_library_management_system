@@ -262,3 +262,81 @@ This project is licensed under the MIT License
 
 ## 📞 Support & Questions
 For issues or questions, please contact the development team or open an issue in the repository.
+
+
+
+
+
+Authentication is handled using JWT tokens
+
+Tokens are stored in localStorage
+
+AuthContext manages:
+
+Logged-in user
+
+Role (STUDENT or LIBRARIAN)
+
+ProtectedRoute prevents unauthorized access:
+
+Students cannot access librarian routes
+
+Librarians cannot access student routes
+
+👨‍🎓 Student Flow
+
+Student registers or logs in
+
+After login:
+
+Student dashboard is shown
+
+Student can borrow books
+
+Student can return books
+
+To enter or exit the library:
+
+Student scans a QR code displayed on the Librarian Dashboard
+
+Scan request is sent with JWT automatically
+
+Entry/Exit status is recorded in the database
+
+✅ Students never access the librarian dashboard
+
+👨‍💼 Librarian Flow
+
+Librarian logs in
+
+Librarian dashboard allows:
+
+Viewing students currently inside the library
+
+Generating ENTRY / EXIT QR codes
+
+Managing books (CRUD)
+
+Managing students (CRUD)
+
+Dashboard updates live when students scan QR codes
+
+❌ Librarians do not scan QR codes
+
+📱 QR Code Scanning
+
+QR codes are generated in the Librarian Dashboard
+
+Students scan:
+
+LIBRARY_ENTRY
+
+LIBRARY_EXIT
+
+Each scan:
+
+Uses JWT authentication
+
+Automatically identifies the student
+
+Updates the live status on the librarian dashboard

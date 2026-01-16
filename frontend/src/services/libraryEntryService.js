@@ -1,29 +1,37 @@
-const API_BASE = '/api/v1/scan';
+// src/services/studentService.js
+const API_BASE = '/api/v1/auth/student';
 
-async function parseRes(res) {
+async function handleResponse(res) {
   const text = await res.text();
-  let body = null;
-  if (text && text.length) {
-    try { body = JSON.parse(text); } catch (e) { body = { message: text }; }
-  }
+  let body = text ? JSON.parse(text) : null;
   if (!res.ok) {
-    const err = (body && body.message) || res.statusText || 'Request failed';
-    throw new Error(err);
+    const errMsg = (body && body.message) || res.statusText || 'Request failed';
+    throw new Error(errMsg);
   }
   return body;
 }
 
-export async function sendScan(payload) {
+function getAuthHeaders() {
   const token = localStorage.getItem('token');
-  const res = await fetch(API_BASE, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': 'Bearer ' + token } : {})
-    },
-    body: JSON.stringify(payload)
-  });
-  return parseRes(res);
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
-export default { sendScan };
+export async function registerStudent(payload) {
+  const res = await fetch(`${API_BASE}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+export async function loginStudent(credentials) {
+  const res = await fetch(`${API_BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  return handleResponse(res);
+}
+
+export default { registerStudent, loginStudent };
