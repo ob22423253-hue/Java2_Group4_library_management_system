@@ -41,7 +41,7 @@ export default function StudentLogin() {
       setMessage({ type: 'success', text: 'Login successful' });
       
       // Redirect to student dashboard
-      setTimeout(() => navigate('/student'), 500);
+      navigate('/student');
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Login failed' });
     } finally {

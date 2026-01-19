@@ -22,27 +22,41 @@ export default function LibrarianLogin() {
       // Call backend login endpoint
       const response = await librarianService.loginLibrarian(form);
       
+      console.log('[LibrarianLogin] Full response:', response);
+      console.log('[LibrarianLogin] Response type:', typeof response);
+      console.log('[LibrarianLogin] Response keys:', Object.keys(response || {}));
+      
       // Backend returns AuthResponse: { token, username, role }
       if (!response?.token) {
-        throw new Error(response?.message || 'Login failed');
+        console.error('[LibrarianLogin] No token in response:', response);
+        throw new Error(response?.message || response?.error || 'Login failed - no token');
       }
 
       // Save to AuthContext with user info
       // Normalize role: backend returns 'ROLE_LIBRARIAN', frontend expects 'LIBRARIAN'
       const normalizedRole = response.role?.replace('ROLE_', '') || 'LIBRARIAN';
       const userInfo = {
-        id: response.username,
-        username: response.username,
+        id: response.username || 'unknown',
+        username: response.username || 'unknown',
         role: normalizedRole,
       };
       
+      console.log('[LibrarianLogin] Logging in with:', { response, normalizedRole, userInfo });
+      console.log('[LibrarianLogin] Calling login function');
       login(userInfo, response.token);
-
+      console.log('[LibrarianLogin] Login complete, state should be updated');
+      console.log('[LibrarianLogin] localStorage check:', { 
+        token: !!localStorage.getItem('token'),
+        role: localStorage.getItem('role'),
+        user: !!localStorage.getItem('loggedInUser')
+      });
       setMessage({ type: 'success', text: 'Login successful' });
       
-      // Redirect to librarian dashboard
-      setTimeout(() => navigate('/librarian'), 500);
+      console.log('[LibrarianLogin] Navigating to /librarian');
+      // Redirect immediately - AuthContext updates synchronously
+      navigate('/librarian');
     } catch (err) {
+      console.error('[LibrarianLogin] Error:', err);
       setMessage({ type: 'error', text: err.message || 'Login failed' });
     } finally {
       setLoading(false);

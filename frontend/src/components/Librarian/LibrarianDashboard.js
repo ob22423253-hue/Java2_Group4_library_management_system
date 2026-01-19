@@ -3,11 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
 import librarianService from '../../services/librarianService';
-import bookService from '../../services/bookService';
 import studentService from '../../services/studentService';
-
-import BookForm from '../Book/BookForm';
-import BookList from '../Book/BookList';
 
 import CurrentCount from '../LibraryEntry/CurrentCount';
 import EntryList from '../LibraryEntry/EntryList';
@@ -21,7 +17,6 @@ export default function LibrarianDashboard() {
 
   const [studentsInside, setStudentsInside] = useState([]);
   const [studentList, setStudentList] = useState([]);
-  const [bookList, setBookList] = useState([]);
   const [selectedQR, setSelectedQR] = useState('ENTRY'); // ENTRY or EXIT
 
   // Load current students inside
@@ -51,21 +46,9 @@ export default function LibrarianDashboard() {
     }
   }
 
-  // Load all books
-  async function loadAllBooks() {
-    try {
-      const res = await bookService.getAllBooks();
-      const data = res?.data || res || [];
-      setBookList(Array.isArray(data) ? data : []);
-    } catch (err) { 
-      setMessage({ type: 'error', text: 'Failed to load books' });
-    }
-  }
-
   useEffect(() => {
     loadStudentsInside();
     loadAllStudents();
-    loadAllBooks();
     
     // Refresh every 10 seconds
     const interval = setInterval(loadStudentsInside, 10000);
@@ -74,41 +57,6 @@ export default function LibrarianDashboard() {
 
   // QR Code value
   const qrValue = selectedQR === 'ENTRY' ? 'LIBRARY_ENTRY' : 'LIBRARY_EXIT';
-
-  // Book CRUD
-  async function handleAddBook(book) {
-    try {
-      await bookService.addBook(book);
-      setMessage({ type: 'success', text: 'Book added successfully' });
-      loadAllBooks();
-    } catch (err) { 
-      setMessage({ type: 'error', text: err.message || 'Failed to add book' });
-    }
-  }
-
-  async function handleEditBook(book) {
-    const newTitle = prompt('New title', book.title);
-    const newAuthor = prompt('New author', book.author);
-    if (!newTitle || !newAuthor) return;
-    try {
-      await bookService.updateBook(book.id, { title: newTitle, author: newAuthor });
-      setMessage({ type: 'success', text: 'Book updated successfully' });
-      loadAllBooks();
-    } catch (err) { 
-      setMessage({ type: 'error', text: err.message || 'Failed to update book' });
-    }
-  }
-
-  async function handleDeleteBook(id) {
-    if (!window.confirm('Delete this book?')) return;
-    try {
-      await bookService.deleteBook(id);
-      setMessage({ type: 'success', text: 'Book deleted successfully' });
-      loadAllBooks();
-    } catch (err) { 
-      setMessage({ type: 'error', text: err.message || 'Failed to delete book' });
-    }
-  }
 
   // Student CRUD
   async function handleAddStudent(student) {
@@ -236,13 +184,6 @@ export default function LibrarianDashboard() {
         <p style={{ marginTop: 10, fontSize: '0.9em', color: '#666' }}>
           Show this QR code to students for {selectedQR === 'ENTRY' ? 'entry' : 'exit'} scanning.
         </p>
-      </section>
-
-      {/* Book Management */}
-      <section style={{ marginBottom: 30 }}>
-        <h3>📚 Book Management</h3>
-        <BookForm onSubmit={handleAddBook} />
-        <BookList books={bookList} onEdit={handleEditBook} onDelete={handleDeleteBook} />
       </section>
 
       {/* Student Management */}

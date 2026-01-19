@@ -3,21 +3,19 @@ import bookService from '../../services/bookService';
 
 export default function BorrowReturn() {
   const [books, setBooks] = useState([]);
-  const [borrowed, setBorrowed] = useState([]);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
 
   async function load() {
     setLoading(true);
     try {
+      // Only load all books - borrow/return not available in backend
       const allRes = await bookService.getAllBooks();
-      const myRes = await bookService.getMyBorrowedBooks();
       
       // Handle both direct array and wrapped object response
-      setBooks(allRes?.data || allRes || []);
-      setBorrowed(myRes?.data || myRes || []);
+      setBooks(Array.isArray(allRes) ? allRes : (allRes?.data || []));
     } catch (e) {
-      setMessage({ type: 'error', text: e.message });
+      setMessage({ type: 'error', text: 'Failed to load books: ' + e.message });
     } finally {
       setLoading(false);
     }
@@ -27,19 +25,8 @@ export default function BorrowReturn() {
 
   async function borrow(bookId) {
     try {
-      const res = await bookService.borrowBook(bookId);
-      setMessage({ type: 'success', text: res?.message || 'Book borrowed successfully' });
-      load();
-    } catch (e) {
-      setMessage({ type: 'error', text: e.message });
-    }
-  }
-
-  async function returnBk(bookId) {
-    try {
-      const res = await bookService.returnBook(bookId);
-      setMessage({ type: 'success', text: res?.message || 'Book returned successfully' });
-      load();
+      // Borrow endpoint not available in backend - show message
+      setMessage({ type: 'warning', text: 'Book borrow feature coming soon' });
     } catch (e) {
       setMessage({ type: 'error', text: e.message });
     }
@@ -62,64 +49,13 @@ export default function BorrowReturn() {
                 marginBottom: '8px',
                 backgroundColor: '#f9f9f9',
                 borderRadius: '4px',
-                border: '1px solid #eee',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                border: '1px solid #eee'
               }}
             >
-              <span>{b.title} — {b.author}</span>
-              <button 
-                onClick={() => borrow(b.id)}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Borrow
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h3>📖 My Borrowed Books</h3>
-      {borrowed.length === 0 ? (
-        <p>No borrowed books</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {borrowed.map(b => (
-            <li 
-              key={b.id}
-              style={{
-                padding: '10px',
-                marginBottom: '8px',
-                backgroundColor: '#fff3e0',
-                borderRadius: '4px',
-                border: '1px solid #ffb74d',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <span>{b.title}</span>
-              <button 
-                onClick={() => returnBk(b.id)}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#ff9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Return
-              </button>
+              <div><strong>{b.title}</strong></div>
+              <div>Author: {b.author || 'Unknown'}</div>
+              <div>Category: {b.category || 'General'}</div>
+              <div>Available: {b.availableCopies || 0} copies</div>
             </li>
           ))}
         </ul>
@@ -129,8 +65,8 @@ export default function BorrowReturn() {
         <p style={{ 
           marginTop: 15,
           padding: '10px',
-          color: message.type === 'error' ? 'crimson' : 'green',
-          backgroundColor: message.type === 'error' ? '#ffebee' : '#f1f8e9',
+          color: message.type === 'error' ? 'crimson' : message.type === 'warning' ? 'orange' : 'green',
+          backgroundColor: message.type === 'error' ? '#ffebee' : message.type === 'warning' ? '#fff3e0' : '#f1f8e9',
           borderRadius: '4px'
         }}>
           {message.text}
