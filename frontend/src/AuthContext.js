@@ -4,31 +4,55 @@ import React, { createContext, useState, useEffect } from 'react';
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState({
-    token: localStorage.getItem('token') || null,
-    role: localStorage.getItem('role') || null,
-  });
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [token, setToken] = useState(null);
 
+  // On mount, restore auth state from localStorage
   useEffect(() => {
-    // Sync localStorage with state
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    if (token && role) {
-      setUser({ token, role });
+    const savedToken = localStorage.getItem('token');
+    const savedRole = localStorage.getItem('role');
+    const savedUser = localStorage.getItem('loggedInUser');
+    
+    if (savedToken && savedRole) {
+      setToken(savedToken);
+      setRole(savedRole);
+      if (savedUser) {
+        try {
+          setLoggedInUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.error('Failed to parse logged in user:', e);
+        }
+      }
     }
   }, []);
 
-  function login(token, role) {
-    localStorage.setItem('token', token);
-    localStorage.setItem('role', role);
-    setUser({ token, role });
+  function login(userInfo, authToken) {
+    // userInfo = { id, name, role } or similar
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('role', userInfo.role || 'STUDENT');
+    localStorage.setItem('loggedInUser', JSON.stringify(userInfo));
+    
+    setToken(authToken);
+    setRole(userInfo.role || 'STUDENT');
+    setLoggedInUser(userInfo);
   }
 
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    setUser({ token: null, role: null });
+    localStorage.removeItem('loggedInUser');
+    
+    setToken(null);
+    setRole(null);
+    setLoggedInUser(null);
   }
+
+  const user = {
+    loggedInUser,
+    token,
+    role
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

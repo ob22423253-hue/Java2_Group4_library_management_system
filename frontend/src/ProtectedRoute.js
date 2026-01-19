@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children, role }) {
   // Not logged in
   if (!user.token) return <Navigate to="/" replace />;
 
-  // Role mismatch
+  // Role mismatch (enforce role-based access)
   if (role && user.role !== role) return <Navigate to="/" replace />;
 
   return children;

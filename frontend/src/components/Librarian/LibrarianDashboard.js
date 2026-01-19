@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../AuthContext';
 import librarianService from '../../services/librarianService';
 import bookService from '../../services/bookService';
 import studentService from '../../services/studentService';
 
 import BookForm from '../Book/BookForm';
 import BookList from '../Book/BookList';
-import BorrowReturn from '../Book/BorrowReturn';
 
 import CurrentCount from '../LibraryEntry/CurrentCount';
 import EntryList from '../LibraryEntry/EntryList';
-import ExitForm from '../LibraryEntry/ExitForm';
 import StudentList from '../Student/StudentList';
 
 export default function LibrarianDashboard() {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -22,51 +24,66 @@ export default function LibrarianDashboard() {
   const [bookList, setBookList] = useState([]);
   const [selectedQR, setSelectedQR] = useState('ENTRY'); // ENTRY or EXIT
 
-  // ------------------ Load current students ------------------
+  // Load current students inside
   async function loadStudentsInside() {
     setLoading(true);
     setMessage(null);
     try {
       const res = await librarianService.getCurrentlyInside();
-      const data = res?.data || [];
-      setStudentsInside(data);
-      setMessage({ type: res?.success ? 'success' : 'error', text: res?.message || '' });
+      // Handle both direct array and wrapped response
+      const data = res?.data || res || [];
+      setStudentsInside(Array.isArray(data) ? data : []);
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Failed to load scans' });
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   }
 
-  // ------------------ Load all students ------------------
+  // Load all students
   async function loadAllStudents() {
     try {
-      const res = await studentService.getAllStudents?.();
-      setStudentList(res?.data || []);
-    } catch (err) { console.error(err); }
+      const res = await studentService.getAllStudents();
+      const data = res?.data || res || [];
+      setStudentList(Array.isArray(data) ? data : []);
+    } catch (err) { 
+      setMessage({ type: 'error', text: 'Failed to load students' });
+    }
   }
 
-  // ------------------ Load all books ------------------
+  // Load all books
   async function loadAllBooks() {
     try {
-      const res = await bookService.getAllBooks?.();
-      setBookList(res?.data || []);
-    } catch (err) { console.error(err); }
+      const res = await bookService.getAllBooks();
+      const data = res?.data || res || [];
+      setBookList(Array.isArray(data) ? data : []);
+    } catch (err) { 
+      setMessage({ type: 'error', text: 'Failed to load books' });
+    }
   }
 
   useEffect(() => {
     loadStudentsInside();
     loadAllStudents();
     loadAllBooks();
+    
+    // Refresh every 10 seconds
+    const interval = setInterval(loadStudentsInside, 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  // ------------------ QR Code ------------------
+  // QR Code value
   const qrValue = selectedQR === 'ENTRY' ? 'LIBRARY_ENTRY' : 'LIBRARY_EXIT';
 
-  // ------------------ Book CRUD ------------------
+  // Book CRUD
   async function handleAddBook(book) {
     try {
       await bookService.addBook(book);
+      setMessage({ type: 'success', text: 'Book added successfully' });
       loadAllBooks();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to add book' });
+    }
   }
 
   async function handleEditBook(book) {
@@ -75,101 +92,176 @@ export default function LibrarianDashboard() {
     if (!newTitle || !newAuthor) return;
     try {
       await bookService.updateBook(book.id, { title: newTitle, author: newAuthor });
+      setMessage({ type: 'success', text: 'Book updated successfully' });
       loadAllBooks();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to update book' });
+    }
   }
 
   async function handleDeleteBook(id) {
+    if (!window.confirm('Delete this book?')) return;
     try {
       await bookService.deleteBook(id);
+      setMessage({ type: 'success', text: 'Book deleted successfully' });
       loadAllBooks();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to delete book' });
+    }
   }
 
-  // ------------------ Borrow/Return ------------------
-  async function handleBorrow({ studentId, bookId }) {
-    try {
-      console.log('Borrow:', studentId, bookId);
-      alert(`Borrowed book ${bookId} to student ${studentId}`);
-    } catch (err) { console.error(err); }
-  }
-
-  async function handleReturn({ studentId, bookId }) {
-    try {
-      console.log('Return:', studentId, bookId);
-      alert(`Returned book ${bookId} from student ${studentId}`);
-    } catch (err) { console.error(err); }
-  }
-
-  // ------------------ Student CRUD ------------------
+  // Student CRUD
   async function handleAddStudent(student) {
     try {
       await studentService.registerStudent(student);
+      setMessage({ type: 'success', text: 'Student added successfully' });
       loadAllStudents();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to add student' });
+    }
   }
 
   async function handleEditStudent(student) {
-    const newName = prompt('New full name', student.fullName);
-    const newPassword = prompt('New password', '');
+    const newName = prompt('New name', student.firstName);
     if (!newName) return;
     try {
-      await studentService.updateStudent?.(student.id, { fullName: newName, password: newPassword });
+      await studentService.updateStudent(student.id, { firstName: newName });
+      setMessage({ type: 'success', text: 'Student updated successfully' });
       loadAllStudents();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to update student' });
+    }
   }
 
   async function handleDeleteStudent(id) {
+    if (!window.confirm('Delete this student?')) return;
     try {
-      await studentService.deleteStudent?.(id);
+      await studentService.deleteStudent(id);
+      setMessage({ type: 'success', text: 'Student deleted successfully' });
       loadAllStudents();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      setMessage({ type: 'error', text: err.message || 'Failed to delete student' });
+    }
   }
 
-  // ------------------ Render ------------------
+  function handleLogout() {
+    logout();
+    navigate('/');
+  }
+
   return (
     <div style={{ padding: 20 }}>
-      <h2>Librarian Dashboard</h2>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 30,
+        paddingBottom: 20,
+        borderBottom: '1px solid #ddd'
+      }}>
+        <h2>📚 Librarian Dashboard</h2>
+        <button 
+          onClick={handleLogout}
+          style={{ 
+            padding: '8px 16px', 
+            backgroundColor: '#d32f2f', 
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Logout
+        </button>
+      </div>
+
+      {message && (
+        <div style={{ 
+          marginBottom: 20, 
+          padding: 15,
+          color: message.type === 'error' ? 'crimson' : 'green',
+          backgroundColor: message.type === 'error' ? '#ffebee' : '#f1f8e9',
+          border: `1px solid ${message.type === 'error' ? 'crimson' : 'green'}`,
+          borderRadius: '4px'
+        }}>
+          {message.text}
+        </div>
+      )}
 
       {/* Current Students Inside */}
       <section style={{ marginBottom: 30 }}>
         <h3>📌 Current Students Inside</h3>
-        <button onClick={loadStudentsInside} disabled={loading}>{loading ? 'Refreshing...' : 'Refresh'}</button>
-        {message && <div style={{ color: message.type === 'error' ? 'crimson' : 'green', marginTop: 10 }}>{message.text}</div>}
+        <button 
+          onClick={loadStudentsInside} 
+          disabled={loading}
+          style={{ 
+            padding: '8px 16px', 
+            backgroundColor: '#2196f3', 
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginBottom: 15
+          }}
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
 
-        {/* Current count */}
         <CurrentCount count={studentsInside.length} />
-
-        {/* Entry list */}
         <EntryList entries={studentsInside} />
-
-        {/* Exit form */}
-        <ExitForm onExit={loadStudentsInside} />
       </section>
 
       {/* QR Code */}
       <section style={{ marginBottom: 30 }}>
         <h3>📱 QR Code for Students</h3>
-        <label>Select Type: </label>
-        <select value={selectedQR} onChange={e => setSelectedQR(e.target.value)}>
-          <option value="ENTRY">Entry</option>
-          <option value="EXIT">Exit</option>
-        </select>
-        <QRCodeCanvas value={qrValue} size={180} style={{ display: 'block', marginTop: 10 }} />
+        <div style={{ marginBottom: 15 }}>
+          <label>Select Type: </label>
+          <select 
+            value={selectedQR} 
+            onChange={e => setSelectedQR(e.target.value)}
+            style={{ marginLeft: 10, padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd' }}
+          >
+            <option value="ENTRY">Entry</option>
+            <option value="EXIT">Exit</option>
+          </select>
+        </div>
+        <div style={{ 
+          padding: 20, 
+          backgroundColor: '#f9f9f9', 
+          borderRadius: '8px',
+          display: 'inline-block'
+        }}>
+          <QRCodeCanvas value={qrValue} size={200} />
+        </div>
+        <p style={{ marginTop: 10, fontSize: '0.9em', color: '#666' }}>
+          Show this QR code to students for {selectedQR === 'ENTRY' ? 'entry' : 'exit'} scanning.
+        </p>
       </section>
 
       {/* Book Management */}
       <section style={{ marginBottom: 30 }}>
-        <h3>📚 Book Management (CRUD)</h3>
+        <h3>📚 Book Management</h3>
         <BookForm onSubmit={handleAddBook} />
         <BookList books={bookList} onEdit={handleEditBook} onDelete={handleDeleteBook} />
-        <BorrowReturn onBorrow={handleBorrow} onReturn={handleReturn} />
       </section>
 
       {/* Student Management */}
       <section>
         <h3>👨‍🎓 Student Management</h3>
-        <button onClick={loadAllStudents}>Load Students</button>
+        <button 
+          onClick={loadAllStudents}
+          style={{ 
+            padding: '8px 16px', 
+            backgroundColor: '#4caf50', 
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginBottom: 15
+          }}
+        >
+          Reload Students
+        </button>
         <StudentList students={studentList} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />
       </section>
     </div>

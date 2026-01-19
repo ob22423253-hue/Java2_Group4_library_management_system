@@ -31,16 +31,16 @@ function Home() {
           <div style={{ backgroundColor: '#f9f9f9', padding: '30px', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
             <h2>👨‍🎓 Students</h2>
             <p>Login, scan entry/exit, borrow & return books</p>
-            <Link to="/student-login" style={btn('#007bff')}>Student Login</Link>
-            <Link to="/student-register" style={btn('#28a745')}>Student Register</Link>
+            <Link to="/student-login" style={btnStyle('#007bff')}>Student Login</Link>
+            <Link to="/student-register" style={btnStyle('#28a745')}>Student Register</Link>
           </div>
 
           {/* LIBRARIAN */}
           <div style={{ backgroundColor: '#f9f9f9', padding: '30px', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
             <h2>👨‍💼 Librarians</h2>
             <p>Manage students, books & live library status</p>
-            <Link to="/librarian-login" style={btn('#ff9800')}>Librarian Login</Link>
-            <Link to="/librarian-register" style={btn('#ff5722')}>Librarian Register</Link>
+            <Link to="/librarian-login" style={btnStyle('#ff9800')}>Librarian Login</Link>
+            <Link to="/librarian-register" style={btnStyle('#ff5722')}>Librarian Register</Link>
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function App() {
 }
 
 /* ---------------- BUTTON STYLE ---------------- */
-function btn(color) {
+function btnStyle(color) {
   return {
     display: 'inline-block',
     backgroundColor: color,

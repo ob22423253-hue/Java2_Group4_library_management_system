@@ -1,12 +1,27 @@
-// src/services/studentService.js
-const API_BASE = '/api/v1/auth/student';
+// src/services/libraryEntryService.js
+const API_BASE = '/api/v1';
 
 async function handleResponse(res) {
   const text = await res.text();
-  let body = text ? JSON.parse(text) : null;
+  let body = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = { message: text || 'Unknown error' };
+  }
+  
   if (!res.ok) {
-    const errMsg = (body && body.message) || res.statusText || 'Request failed';
-    throw new Error(errMsg);
+    let errorMsg = 'Request failed';
+    if (body && body.message) {
+      errorMsg = body.message;
+    } else if (body && body.error) {
+      errorMsg = body.error;
+    } else if (typeof body === 'string') {
+      errorMsg = body;
+    } else if (res.statusText) {
+      errorMsg = res.statusText;
+    }
+    throw new Error(errorMsg);
   }
   return body;
 }
@@ -16,8 +31,9 @@ function getAuthHeaders() {
   return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
-export async function registerStudent(payload) {
-  const res = await fetch(`${API_BASE}/register`, {
+export async function sendScan(payload) {
+  // payload = { qrValue, scanType } (student identity comes from JWT)
+  const res = await fetch(`${API_BASE}/scan`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(payload),
@@ -25,13 +41,37 @@ export async function registerStudent(payload) {
   return handleResponse(res);
 }
 
-export async function loginStudent(credentials) {
-  const res = await fetch(`${API_BASE}/login`, {
+export async function recordEntry(payload) {
+  const res = await fetch(`${API_BASE}/library-entries`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
 
-export default { registerStudent, loginStudent };
+export async function recordExit(entryId, payload) {
+  const res = await fetch(`${API_BASE}/library-entries/${entryId}/exit`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+export async function getEntriesByStudent(studentId) {
+  const res = await fetch(`${API_BASE}/library-entries/student/${studentId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+  });
+  return handleResponse(res);
+}
+
+const libraryEntryService = {
+  sendScan,
+  recordEntry,
+  recordExit,
+  getEntriesByStudent,
+};
+
+export default libraryEntryService;

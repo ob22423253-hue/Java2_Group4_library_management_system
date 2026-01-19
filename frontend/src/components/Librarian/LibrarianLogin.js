@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import studentService from '../../services/studentService';
+import librarianService from '../../services/librarianService';
 import { AuthContext } from '../../AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export default function StudentLogin() {
-  const [form, setForm] = useState({ studentId: '', password: '' });
+export default function LibrarianLogin() {
+  const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const { login } = useContext(AuthContext);
@@ -20,19 +20,19 @@ export default function StudentLogin() {
     setMessage(null);
     try {
       // Call backend login endpoint
-      const response = await studentService.loginStudent(form);
+      const response = await librarianService.loginLibrarian(form);
       
-      // Backend returns AuthResponse: { token, studentId, role }
+      // Backend returns AuthResponse: { token, username, role }
       if (!response?.token) {
         throw new Error(response?.message || 'Login failed');
       }
 
       // Save to AuthContext with user info
-      // Normalize role: backend returns 'ROLE_STUDENT', frontend expects 'STUDENT'
-      const normalizedRole = response.role?.replace('ROLE_', '') || 'STUDENT';
+      // Normalize role: backend returns 'ROLE_LIBRARIAN', frontend expects 'LIBRARIAN'
+      const normalizedRole = response.role?.replace('ROLE_', '') || 'LIBRARIAN';
       const userInfo = {
-        id: response.studentId,
-        studentId: response.studentId,
+        id: response.username,
+        username: response.username,
         role: normalizedRole,
       };
       
@@ -40,8 +40,8 @@ export default function StudentLogin() {
 
       setMessage({ type: 'success', text: 'Login successful' });
       
-      // Redirect to student dashboard
-      setTimeout(() => navigate('/student'), 500);
+      // Redirect to librarian dashboard
+      setTimeout(() => navigate('/librarian'), 500);
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Login failed' });
     } finally {
@@ -51,13 +51,13 @@ export default function StudentLogin() {
 
   return (
     <div style={{ padding: 20, maxWidth: 400, margin: '40px auto' }}>
-      <h2>Student Login</h2>
+      <h2>Librarian Login</h2>
       <form onSubmit={onSubmit}>
         <div style={{ marginBottom: 15 }}>
-          <label>Student ID</label><br />
+          <label>Username</label><br />
           <input 
-            name="studentId" 
-            value={form.studentId} 
+            name="username" 
+            value={form.username} 
             onChange={onChange} 
             required 
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
@@ -81,7 +81,7 @@ export default function StudentLogin() {
             style={{ 
               width: '100%', 
               padding: '10px', 
-              backgroundColor: '#007bff', 
+              backgroundColor: '#ff9800', 
               color: 'white',
               border: 'none',
               borderRadius: '4px',
