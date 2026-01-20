@@ -538,49 +538,8 @@ start.bat  # Windows automatic setup
 5. Scan QR code (Exit)
 6. Show entry history
 
-**Be Ready to Answer**:
-- "Why JWT instead of sessions?"
-- "How does the QR scanning work on mobile?"
-- "What about data privacy and security?"
-- "Can you scale this to multiple campuses?"
-- "How do you handle offline access?"
-
-### Talking Points:
-- "Thank you for your attention."
-- "We're ready to answer any questions."
-- "We're happy to demonstrate the system live if time permits."
 
 ---
-
-## 📝 Presentation Tips
-
-### Delivery
-- Speak clearly and at a measured pace
-- Make eye contact with audience
-- Use hand gestures to emphasize points
-- Avoid reading directly from slides
-- Practice transitions between slides
-
-### Visual Design
-- Keep slides uncluttered (max 5 bullet points)
-- Use consistent colors and fonts
-- Include diagrams for complex concepts
-- Show code snippets for technical details
-- Use screenshots of the running application
-
-### Timing
-- **15-minute presentation**: ~2 minutes per slide
-- **20-minute presentation**: ~2.5-3 minutes per slide
-- **Leave 3-5 minutes for questions**
-- Practice with a timer
-
-### Demo Best Practices
-- Have a backup plan if live demo fails
-- Use pre-recorded demo video as fallback
-- Ensure internet connection is stable
-- Close unnecessary applications
-- Have sample data ready in database
-- Start with successful scenario first
 
 ---
 
@@ -593,7 +552,4 @@ start.bat  # Windows automatic setup
 5. **Scalability**: Designed for growth and enhancement
 6. **Professional**: Industry-standard practices and patterns
 
----
-
-**Last Updated**: January 20, 2026
 
