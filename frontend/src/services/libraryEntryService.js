@@ -67,11 +67,28 @@ export async function getEntriesByStudent(studentId) {
   return handleResponse(res);
 }
 
+export async function getCurrentStatus() {
+  // Get current student's library status by checking their latest entry record
+  // If latest has exitTime = null, they're inside. Otherwise outside.
+  try {
+    const res = await fetch(`${API_BASE}/library-entries/current`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    return handleResponse(res);
+  } catch (err) {
+    // Fallback: If endpoint doesn't exist, return default (not inside)
+    console.warn('[libraryEntryService] Status endpoint failed, defaulting to outside:', err.message);
+    return { isInside: false };
+  }
+}
+
 const libraryEntryService = {
   sendScan,
   recordEntry,
   recordExit,
   getEntriesByStudent,
+  getCurrentStatus,
 };
 
 export default libraryEntryService;

@@ -50,6 +50,10 @@ public class JwtService {
             // take first authority
             String role = userDetails.getAuthorities().iterator().next().getAuthority();
             extra.put("role", role);
+            // Debug: System.out.println("Generated token with role: " + role);
+        } else {
+            // Fallback: ensure role is always set even if authorities are empty
+            extra.put("role", "ROLE_LIBRARIAN");
         }
         return generateToken(extra, userDetails);
     }
