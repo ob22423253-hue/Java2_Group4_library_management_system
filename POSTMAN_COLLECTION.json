@@ -1,0 +1,653 @@
+{
+  "info": {
+    "_postman_id": "university-library-system",
+    "name": "University Library System API",
+    "description": "Complete API documentation for University Library System\n\nAuthentication: JWT Bearer Token\nBase URL: http://localhost:8080/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Librarian Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"librarian1\",\n  \"password\": \"password123\",\n  \"email\": \"librarian@university.edu\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/librarian/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "librarian",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Librarian Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"librarian1\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/librarian/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "librarian",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Student Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"S12345\",\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Smith\",\n  \"email\": \"alice@university.edu\",\n  \"password\": \"password123\",\n  \"department\": \"Computer Science\",\n  \"cardId\": \"CARD12345\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/student/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "student",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Student Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"S12345\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/student/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "student",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "QR Scanning",
+      "item": [
+        {
+          "name": "Process QR Scan (Entry/Exit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrValue\": \"LIBRARY_ENTRY\",\n  \"scanType\": \"ENTRY\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/scan",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "scan"
+              ]
+            },
+            "description": "Process a QR code scan for library entry or exit\nRequires: STUDENT role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scan Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/librarian/scans",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "librarian",
+                "scans"
+              ]
+            },
+            "description": "Get all QR code scan records\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Library Entries",
+      "item": [
+        {
+          "name": "Get All Library Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/library-entries",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "library-entries"
+              ]
+            },
+            "description": "Get all library entry/exit records\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Students Currently Inside",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/library-entries/current-inside",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "library-entries",
+                "current-inside"
+              ]
+            },
+            "description": "Get list of students currently in the library\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Entry History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/library-entries/student/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "library-entries",
+                "student",
+                "1"
+              ]
+            },
+            "description": "Get entry/exit history for a specific student\nReplace '1' with student ID"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "books"
+              ]
+            },
+            "description": "Get all books in the library"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Introduction to Java\",\n  \"author\": \"John Doe\",\n  \"isbn\": \"978-0-13-110199-8\",\n  \"quantity\": 5,\n  \"location\": \"Shelf A-1\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "books"
+              ]
+            },
+            "description": "Create a new book record\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Introduction to Java (2nd Edition)\",\n  \"author\": \"John Doe\",\n  \"isbn\": \"978-0-13-110199-8\",\n  \"quantity\": 8,\n  \"location\": \"Shelf A-1\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "books",
+                "1"
+              ]
+            },
+            "description": "Update a book record\nReplace '1' with book ID\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "books",
+                "1"
+              ]
+            },
+            "description": "Delete a book record\nReplace '1' with book ID\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/students",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "students"
+              ]
+            },
+            "description": "Get all students\nRequires: LIBRARIAN role JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/students/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "1"
+              ]
+            },
+            "description": "Get student details by ID\nReplace '1' with student ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Johnson\",\n  \"email\": \"alice.johnson@university.edu\",\n  \"department\": \"Computer Science\",\n  \"cardId\": \"CARD12345\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/students/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "1"
+              ]
+            },
+            "description": "Update student profile\nReplace '1' with student ID"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Borrow Records",
+      "item": [
+        {
+          "name": "Get All Borrow Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrow-records",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "borrow-records"
+              ]
+            },
+            "description": "Get all book borrowing records"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Borrow Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": 1,\n  \"bookId\": 1,\n  \"borrowDate\": \"2026-01-20T10:00:00\",\n  \"dueDate\": \"2026-02-03T10:00:00\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrow-records",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "borrow-records"
+              ]
+            },
+            "description": "Create a new book borrow record"
+          },
+          "response": []
+        },
+        {
+          "name": "Return Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {JWT_TOKEN}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"returnDate\": \"2026-01-25T14:30:00\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrow-records/1/return",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "borrow-records",
+                "1",
+                "return"
+              ]
+            },
+            "description": "Record book return\nReplace '1' with borrow record ID"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{JWT_TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "JWT_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    }
+  ]
+}
