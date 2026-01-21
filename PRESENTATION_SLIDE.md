@@ -20,7 +20,34 @@
 
 ---
 
-## SLIDE 2: Project Overview
+## SLIDE 1.5: Team Roles & Responsibilities
+**Duration**: 1 minute
+
+### Content:
+
+**Team Members & Contributions**:
+
+| Team Member | Role | Responsibilities |
+|---|---|---|
+| **Momodou Boye Jallow** | Authentication & Security | JwtAuthenticationFilter, JwtService, JwtTokenProvider, StudentDetailsService, LibrarianDetailsService, AuthController, StudentAuthController, SecurityConfig, CorsConfig, User entity management |
+| **Kamara Musa** | Core Library Operations | Book management, Borrow records, Library entry/exit system, BookController, BorrowRecordController, LibraryEntryController, Related database migrations |
+| **Flourish N.C. Erege** | Student Academic Management | Student data, Department management, Course handling, StudentMajorMinor relationships, StudentController, DepartmentController, CourseController, Initial schema & academic data migrations |
+| **Emma Bangura** | Monitoring & Advanced Records | Fingerprint recognition, CCTV event tracking, Scan records management, FingerprintRecordController, ScanController, CCTVEventController, Biometric & monitoring database migrations |
+| **Ousman Bah** | Frontend Development | Complete React frontend, All UI components, User interfaces for students/librarians, QR code scanning interface, Authentication UI, Dashboard design & implementation |
+
+### Talking Points:
+- "Our team of 5 developers collaborated on different layers of the application."
+- "Each team member specialized in specific architectural components to ensure quality and separation of concerns."
+- "Authentication and security handled by Momodou ensures all user interactions are protected."
+- "Kamara managed core library operations—the heart of our system."
+- "Flourish handled academic data and student relationships with the university."
+- "Emma developed the advanced monitoring features for future enhancements."
+- "Ousman built the entire frontend, ensuring a seamless user experience across all components."
+- "This division of labor allowed us to work efficiently and deliver a comprehensive solution."
+
+---
+
+## SLIDE 3: Project Overview
 **Duration**: 1 minute
 
 ### Content:
@@ -38,7 +65,7 @@
 
 ---
 
-## SLIDE 3: System Architecture
+## SLIDE 4: System Architecture
 **Duration**: 1.5 minutes
 
 ### Content:
@@ -78,7 +105,7 @@
 
 ---
 
-## SLIDE 4: Technology Stack
+## SLIDE 5: Technology Stack
 **Duration**: 1 minute
 
 ### Content:
@@ -111,7 +138,7 @@
 
 ---
 
-## SLIDE 5: Key Features - Authentication
+## SLIDE 6: Key Features - Authentication
 **Duration**: 1 minute
 
 ### Content:
@@ -139,7 +166,7 @@
 
 ---
 
-## SLIDE 6: Key Features - QR Scanning
+## SLIDE 7: Key Features - QR Scanning
 **Duration**: 1.5 minutes
 
 ### Content:
@@ -183,7 +210,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 7: Key Features - Database
+## SLIDE 8: Key Features - Database
 **Duration**: 1 minute
 
 ### Content:
@@ -215,7 +242,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 8: API Endpoints
+## SLIDE 9: API Endpoints
 **Duration**: 1 minute
 
 ### Content:
@@ -254,7 +281,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 9: Data Flow Diagram
+## SLIDE 10: Data Flow Diagram
 **Duration**: 1 minute
 
 ### Content:
@@ -293,7 +320,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 10: Implemented Features ✅
+## SLIDE 11: Implemented Features ✅
 **Duration**: 1 minute
 
 ### Content:
@@ -324,7 +351,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 11: Features In Progress 🚧
+## SLIDE 12: Features In Progress 🚧
 **Duration**: 1 minute
 
 ### Content:
@@ -351,7 +378,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 12: Technical Implementation Highlights
+## SLIDE 13: Technical Implementation Highlights
 **Duration**: 1.5 minutes
 
 ### Content:
@@ -383,7 +410,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 13: Challenges & Solutions
+## SLIDE 14: Challenges & Solutions
 **Duration**: 1 minute
 
 ### Content:
@@ -404,7 +431,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 14: Project Statistics
+## SLIDE 15: Project Statistics
 **Duration**: 30 seconds
 
 ### Content:
@@ -433,7 +460,7 @@ Librarian sees updated list
 
 ---
 
-## SLIDE 15: Deployment & Running
+## SLIDE 16: Deployment & Running
 **Duration**: 1 minute
 
 ### Content:
@@ -470,7 +497,7 @@ start.bat  # Windows automatic setup
 
 ---
 
-## SLIDE 16: Lessons Learned
+## SLIDE 17: Lessons Learned
 **Duration**: 1 minute
 
 ### Content:
@@ -495,7 +522,7 @@ start.bat  # Windows automatic setup
 
 ---
 
-## SLIDE 17: Future Vision
+## SLIDE 18: Future Vision
 **Duration**: 1 minute
 
 ### Content:
@@ -525,7 +552,7 @@ start.bat  # Windows automatic setup
 
 ---
 
-## SLIDE 18: Questions & Demo
+## SLIDE 19: Questions & Demo
 **Duration**: 2-3 minutes
 
 ### Content:
