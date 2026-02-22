@@ -19,28 +19,48 @@ export default function StudentLogin() {
     setLoading(true);
     setMessage(null);
     try {
-      // Call backend login endpoint
+      // Step 1: Login
       const response = await studentService.loginStudent(form);
-      
-      // Backend returns AuthResponse: { token, studentId, role }
-      if (!response?.token) {
-        throw new Error(response?.message || 'Login failed');
+      if (!response?.token) throw new Error(response?.message || 'Login failed');
+
+      const normalizedRole = response.role?.replace('ROLE_', '') || 'STUDENT';
+
+      // Step 2: Fetch full student profile
+      localStorage.setItem('token', response.token);
+      let fullProfile = null;
+      try {
+        const profileRes = await fetch(
+          `http://localhost:8080/api/v1/students/student-id/${response.studentId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + response.token,
+            },
+          }
+        );
+        if (profileRes.ok) {
+          const profileBody = await profileRes.json();
+          fullProfile = profileBody?.data ?? profileBody;
+        }
+      } catch (profileErr) {
+        console.warn('Could not fetch full profile:', profileErr.message);
       }
 
-      // Save to AuthContext with user info
-      // Normalize role: backend returns 'ROLE_STUDENT', frontend expects 'STUDENT'
-      const normalizedRole = response.role?.replace('ROLE_', '') || 'STUDENT';
+      // Step 3: Save complete user info to AuthContext
       const userInfo = {
-        id: response.studentId,
-        studentId: response.studentId,
+        id: fullProfile?.id ?? response.studentId,
+        studentId: fullProfile?.studentId ?? response.studentId,
+        email: fullProfile?.email ?? null,
+        department: fullProfile?.department?.name ?? fullProfile?.department ?? null,
+        universityCardId: fullProfile?.universityCardId ?? null,
+        firstName: fullProfile?.firstName ?? null,
+        lastName: fullProfile?.lastName ?? null,
         role: normalizedRole,
       };
-      
-      login(userInfo, response.token);
 
+      login(userInfo, response.token);
       setMessage({ type: 'success', text: 'Login successful' });
-      
-      // Redirect to student dashboard
       navigate('/student');
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Login failed' });
@@ -55,51 +75,27 @@ export default function StudentLogin() {
       <form onSubmit={onSubmit}>
         <div style={{ marginBottom: 15 }}>
           <label>Student ID</label><br />
-          <input 
-            name="studentId" 
-            value={form.studentId} 
-            onChange={onChange} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
+          <input name="studentId" value={form.studentId} onChange={onChange} required
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
         </div>
         <div style={{ marginBottom: 15 }}>
           <label>Password</label><br />
-          <input 
-            name="password" 
-            type="password" 
-            value={form.password} 
-            onChange={onChange} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
+          <input name="password" type="password" value={form.password} onChange={onChange} required
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
         </div>
         <div style={{ marginTop: 20 }}>
-          <button 
-            disabled={loading} 
-            type="submit"
-            style={{ 
-              width: '100%', 
-              padding: '10px', 
-              backgroundColor: '#007bff', 
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
+          <button disabled={loading} type="submit"
+            style={{ width: '100%', padding: '10px', backgroundColor: '#007bff',
+              color: 'white', border: 'none', borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer' }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </div>
       </form>
       {message && (
-        <div style={{ 
-          marginTop: 15, 
-          color: message.type === 'error' ? 'crimson' : 'green',
-          padding: '10px',
-          border: `1px solid ${message.type === 'error' ? 'crimson' : 'green'}`,
-          borderRadius: '4px'
-        }}>
+        <div style={{ marginTop: 15, color: message.type === 'error' ? 'crimson' : 'green',
+          padding: '10px', border: `1px solid ${message.type === 'error' ? 'crimson' : 'green'}`,
+          borderRadius: '4px' }}>
           {message.text}
         </div>
       )}

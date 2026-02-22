@@ -1,5 +1,6 @@
 package com.university.universitylibrarysystem.controller;
 
+import org.springframework.transaction.annotation.Transactional;
 import com.university.universitylibrarysystem.dto.ScanRequestDTO;
 import com.university.universitylibrarysystem.entity.LibraryEntry;
 import com.university.universitylibrarysystem.entity.Student;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,24 +28,15 @@ public class ScanController {
     private final LibraryEntryRepository libraryEntryRepository;
     private final StudentRepository studentRepository;
 
-    // ===============================
-    // STUDENT SCAN (ENTRY / EXIT)
-    // ===============================
     @PostMapping("/scan")
     public ResponseEntity<Object> scan(@RequestBody(required = false) ScanRequestDTO request) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth == null || auth.getName() == null) {
-                return ResponseHandler.generateResponse(
-                        "Unauthorized",
-                        HttpStatus.UNAUTHORIZED,
-                        null
-                );
+                return ResponseHandler.generateResponse("Unauthorized", HttpStatus.UNAUTHORIZED, null);
             }
 
-            // JWT subject = studentId
             String studentId = auth.getName();
-
             Student student = studentRepository.findByStudentId(studentId)
                     .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
 
@@ -49,13 +44,8 @@ public class ScanController {
             String scanTypeRaw = request != null ? request.getScanType() : null;
 
             if (qrValue == null ||
-                !(qrValue.equalsIgnoreCase("LIBRARY_ENTRY")
-                  || qrValue.equalsIgnoreCase("LIBRARY_EXIT"))) {
-                return ResponseHandler.generateResponse(
-                        "Invalid or missing QR code",
-                        HttpStatus.BAD_REQUEST,
-                        null
-                );
+                !(qrValue.equalsIgnoreCase("LIBRARY_ENTRY") || qrValue.equalsIgnoreCase("LIBRARY_EXIT"))) {
+                return ResponseHandler.generateResponse("Invalid or missing QR code", HttpStatus.BAD_REQUEST, null);
             }
 
             boolean isEntry;
@@ -65,24 +55,14 @@ public class ScanController {
                 isEntry = qrValue.equalsIgnoreCase("LIBRARY_ENTRY");
             }
 
-            LocalDateTime scanTime =
-                    request != null && request.getScanTime() != null
-                            ? request.getScanTime()
-                            : LocalDateTime.now();
+            LocalDateTime scanTime = (request != null && request.getScanTime() != null)
+                    ? request.getScanTime()
+                    : LocalDateTime.now();
 
-            // ===============================
-            // ENTRY
-            // ===============================
             if (isEntry) {
-                List<LibraryEntry> openEntries =
-                        libraryEntryRepository.findByStudentAndExitTimeIsNull(student);
-
+                List<LibraryEntry> openEntries = libraryEntryRepository.findByStudentAndExitTimeIsNull(student);
                 if (!openEntries.isEmpty()) {
-                    return ResponseHandler.generateResponse(
-                            "Student already has an open entry",
-                            HttpStatus.BAD_REQUEST,
-                            null
-                    );
+                    return ResponseHandler.generateResponse("Student already has an open entry", HttpStatus.BAD_REQUEST, null);
                 }
 
                 LibraryEntry entry = new LibraryEntry();
@@ -92,26 +72,13 @@ public class ScanController {
                 entry.setEntryCaptureRef(qrValue);
 
                 LibraryEntry saved = libraryEntryRepository.save(entry);
-
-                return ResponseHandler.generateResponse(
-                        "Entry recorded successfully",
-                        HttpStatus.CREATED,
-                        saved
-                );
+                return ResponseHandler.generateResponse("Entry recorded successfully", HttpStatus.CREATED, saved);
             }
 
-            // ===============================
             // EXIT
-            // ===============================
-            List<LibraryEntry> openEntries =
-                    libraryEntryRepository.findByStudentAndExitTimeIsNull(student);
-
+            List<LibraryEntry> openEntries = libraryEntryRepository.findByStudentAndExitTimeIsNull(student);
             if (openEntries.isEmpty()) {
-                return ResponseHandler.generateResponse(
-                        "No active entry found for student",
-                        HttpStatus.BAD_REQUEST,
-                        null
-                );
+                return ResponseHandler.generateResponse("No active entry found for student", HttpStatus.BAD_REQUEST, null);
             }
 
             LibraryEntry activeEntry = openEntries.get(openEntries.size() - 1);
@@ -119,47 +86,48 @@ public class ScanController {
             activeEntry.setExitCaptureRef(qrValue);
 
             LibraryEntry saved = libraryEntryRepository.save(activeEntry);
-
-            return ResponseHandler.generateResponse(
-                    "Exit recorded successfully",
-                    HttpStatus.OK,
-                    saved
-            );
+            return ResponseHandler.generateResponse("Exit recorded successfully", HttpStatus.OK, saved);
 
         } catch (IllegalArgumentException e) {
-            return ResponseHandler.generateResponse(
-                    e.getMessage(),
-                    HttpStatus.NOT_FOUND,
-                    null
-            );
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.NOT_FOUND, null);
         } catch (Exception e) {
-            return ResponseHandler.generateResponse(
-                    "Error recording scan: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    null
-            );
+            return ResponseHandler.generateResponse("Error recording scan: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
-
-    // ===============================
-    // LIBRARIAN VIEW (NO DTO)
-    // ===============================
+    @Transactional
     @GetMapping("/librarian/scans")
     public ResponseEntity<Object> getAllScans() {
         try {
             List<LibraryEntry> entries = libraryEntryRepository.findAll();
 
-            return ResponseHandler.generateResponse(
-                    "Library scan records",
-                    HttpStatus.OK,
-                    entries
-            );
+            List<Map<String, Object>> result = entries.stream().map(e -> {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", e.getId());
+                map.put("entryTime", e.getEntryTime());
+                map.put("exitTime", e.getExitTime());
+                map.put("entryMethod", e.getEntryMethod());
+                map.put("notes", e.getNotes());
+
+                Student s = e.getStudent();
+                if (s != null) {
+                    Map<String, Object> studentMap = new LinkedHashMap<>();
+                    studentMap.put("id", s.getId());
+                    studentMap.put("studentId", s.getStudentId());
+                    studentMap.put("firstName", s.getFirstName());
+                    studentMap.put("lastName", s.getLastName());
+                    studentMap.put("department", s.getDepartment());
+                    studentMap.put("email", s.getEmail());
+                    map.put("student", studentMap);
+                } else {
+                    map.put("student", null);
+                }
+                return map;
+            }).collect(Collectors.toList());
+
+            return ResponseHandler.generateResponse("Library scan records", HttpStatus.OK, result);
+
         } catch (Exception e) {
-            return ResponseHandler.generateResponse(
-                    "Error fetching scans: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    null
-            );
+            return ResponseHandler.generateResponse("Error fetching scans: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
 }

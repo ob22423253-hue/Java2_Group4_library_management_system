@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/librarian/**").hasAnyAuthority(
                     "ROLE_LIBRARIAN",
                     "ROLE_ADMIN"
-                )
+                )                
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

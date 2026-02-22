@@ -47,12 +47,17 @@ export default function LibrarianDashboard() {
   }
 
   useEffect(() => {
-    loadStudentsInside();
-    loadAllStudents();
+    // Small delay to ensure token is in localStorage before first request
+    const timeout = setTimeout(() => {
+      loadStudentsInside();
+      loadAllStudents();
+    }, 300);
     
-    // Refresh every 10 seconds
     const interval = setInterval(loadStudentsInside, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   // QR Code value
