@@ -28,6 +28,7 @@ public class ScanController {
     private final LibraryEntryRepository libraryEntryRepository;
     private final StudentRepository studentRepository;
 
+    @Transactional
     @PostMapping("/scan")
     public ResponseEntity<Object> scan(@RequestBody(required = false) ScanRequestDTO request) {
         try {
@@ -94,6 +95,7 @@ public class ScanController {
             return ResponseHandler.generateResponse("Error recording scan: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
+
     @Transactional
     @GetMapping("/librarian/scans")
     public ResponseEntity<Object> getAllScans() {
