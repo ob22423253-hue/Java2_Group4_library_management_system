@@ -21,18 +21,37 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
 
+    // Manual mapping to bypass MapStruct issues
+    private StudentDTO manualToDto(Student s) {
+        StudentDTO dto = new StudentDTO();
+        dto.setId(s.getId());
+        dto.setStudentId(s.getStudentId());
+        dto.setFirstName(s.getFirstName());
+        dto.setLastName(s.getLastName());
+        dto.setEmail(s.getEmail());
+        dto.setDepartment(s.getDepartment());
+        dto.setUniversityCardId(s.getUniversityCardId());
+        dto.setPhoneNumber(s.getPhoneNumber());
+        dto.setPhotoUrl(s.getPhotoUrl());
+        dto.setRfidUid(s.getRfidUid());
+        dto.setFingerprintReference(s.getFingerprintReference());
+        dto.setRole(s.getRole());
+        dto.setActive(s.isActive());
+        return dto;
+    }
+
     @Override
     public StudentDTO saveStudent(StudentDTO dto) {
         Student entity = studentMapper.toEntity(dto);
         Student saved = studentRepository.save(entity);
-        return maskPassword(studentMapper.toDto(saved));
+        return maskPassword(manualToDto(saved));
     }
 
     @Override
     public List<StudentDTO> getAllStudents() {
         return studentRepository.findAll()
                 .stream()
-                .map(studentMapper::toDto)
+                .map(this::manualToDto)
                 .map(this::maskPassword)
                 .toList();
     }
@@ -41,10 +60,9 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO getStudentById(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
-        return maskPassword(studentMapper.toDto(student));
+        return maskPassword(manualToDto(student));
     }
 
-    // <-- NEW METHOD FOR CONTROLLERS
     @Override
     public StudentDTO findById(Long id) {
         return getStudentById(id);
@@ -66,14 +84,14 @@ public class StudentServiceImpl implements StudentService {
         existing.setRfidUid(dto.getRfidUid());
         existing.setFingerprintReference(dto.getFingerprintReference());
         existing.setRole(dto.getRole());
-        existing.setActive(dto.isActive()); // <-- FIXED
+        existing.setActive(dto.isActive());
 
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             existing.setPassword(dto.getPassword());
         }
 
         Student saved = studentRepository.save(existing);
-        return maskPassword(studentMapper.toDto(saved));
+        return maskPassword(manualToDto(saved));
     }
 
     @Override
@@ -88,13 +106,13 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO findByUniversityCardId(String cardId) {
         Student student = studentRepository.findByUniversityCardId(cardId)
                 .orElseThrow(() -> new RuntimeException("Student not found with card ID: " + cardId));
-        return maskPassword(studentMapper.toDto(student));
+        return maskPassword(manualToDto(student));
     }
 
     @Override
     public Page<StudentDTO> searchStudents(String query, Pageable pageable) {
         return studentRepository.searchByNameOrEmail(query, pageable)
-                .map(studentMapper::toDto)
+                .map(this::manualToDto)
                 .map(this::maskPassword);
     }
 
@@ -102,7 +120,7 @@ public class StudentServiceImpl implements StudentService {
     public List<StudentDTO> searchByName(String name) {
         return studentRepository.searchByName(name)
                 .stream()
-                .map(studentMapper::toDto)
+                .map(this::manualToDto)
                 .map(this::maskPassword)
                 .toList();
     }
@@ -111,21 +129,21 @@ public class StudentServiceImpl implements StudentService {
     public StudentDTO findByRfidUid(String rfidUid) {
         Student student = studentRepository.findByRfidUid(rfidUid)
                 .orElseThrow(() -> new RuntimeException("Student not found with RFID: " + rfidUid));
-        return maskPassword(studentMapper.toDto(student));
+        return maskPassword(manualToDto(student));
     }
 
     @Override
     public StudentDTO findByStudentId(String studentId) {
         Student student = studentRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with student ID: " + studentId));
-        return maskPassword(studentMapper.toDto(student));
+        return maskPassword(manualToDto(student));
     }
 
     @Override
     public List<StudentDTO> getActiveStudents() {
         return studentRepository.findByActiveTrue()
                 .stream()
-                .map(studentMapper::toDto)
+                .map(this::manualToDto)
                 .map(this::maskPassword)
                 .toList();
     }
@@ -134,7 +152,7 @@ public class StudentServiceImpl implements StudentService {
     public List<StudentDTO> getStudentsCurrentlyInLibrary() {
         return studentRepository.findStudentsCurrentlyInLibrary()
                 .stream()
-                .map(studentMapper::toDto)
+                .map(this::manualToDto)
                 .map(this::maskPassword)
                 .toList();
     }

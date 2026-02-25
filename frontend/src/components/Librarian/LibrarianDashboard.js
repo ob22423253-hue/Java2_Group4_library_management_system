@@ -5,6 +5,7 @@ import { AuthContext } from '../../AuthContext';
 import librarianService from '../../services/librarianService';
 import studentService from '../../services/studentService';
 
+import BookManagement from '../Book/BookManagement';
 import CurrentCount from '../LibraryEntry/CurrentCount';
 import EntryList from '../LibraryEntry/EntryList';
 import StudentList from '../Student/StudentList';
@@ -24,11 +25,9 @@ export default function LibrarianDashboard() {
     try {
       const res = await librarianService.getCurrentlyInside();
       if (res !== null) {
-        // only update state when we got a valid response
         const data = res?.data || [];
         setStudentsInside(Array.isArray(data) ? data : []);
       }
-      // if res is null, a fetch error occurred — keep existing list, don't go blank
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Failed to load scans' });
     } finally {
@@ -39,9 +38,11 @@ export default function LibrarianDashboard() {
   async function loadAllStudents() {
     try {
       const res = await studentService.getAllStudents();
-      const data = res?.data || res || [];
+      console.log('RAW RES:', JSON.stringify(res).substring(0, 500));
+      const data = Array.isArray(res) ? res : (res?.data || res?.content || []);
       setStudentList(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.log('STUDENT ERROR:', err.message);
       setMessage({ type: 'error', text: 'Failed to load students' });
     }
   }
@@ -61,21 +62,22 @@ export default function LibrarianDashboard() {
 
   const qrValue = selectedQR === 'ENTRY' ? 'LIBRARY_ENTRY' : 'LIBRARY_EXIT';
 
-  async function handleAddStudent(student) {
-    try {
-      await studentService.registerStudent(student);
-      setMessage({ type: 'success', text: 'Student added successfully' });
-      loadAllStudents();
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Failed to add student' });
-    }
-  }
-
   async function handleEditStudent(student) {
-    const newName = prompt('New name', student.firstName);
-    if (!newName) return;
+    const dbId = student.id;
+    if (!dbId) {
+      setMessage({ type: 'error', text: 'Cannot edit: student database ID is missing. Please contact your backend developer.' });
+      return;
+    }
+    const newFirstName = prompt('New first name', student.firstName);
+    if (!newFirstName) return;
+    const newLastName = prompt('New last name', student.lastName);
+    if (!newLastName) return;
     try {
-      await studentService.updateStudent(student.id, { firstName: newName });
+      await studentService.updateStudent(dbId, {
+        ...student,
+        firstName: newFirstName,
+        lastName: newLastName,
+      });
       setMessage({ type: 'success', text: 'Student updated successfully' });
       loadAllStudents();
     } catch (err) {
@@ -83,10 +85,15 @@ export default function LibrarianDashboard() {
     }
   }
 
-  async function handleDeleteStudent(id) {
-    if (!window.confirm('Delete this student?')) return;
+  async function handleDeleteStudent(student) {
+    const dbId = student.id;
+    if (!dbId) {
+      setMessage({ type: 'error', text: 'Cannot delete: student database ID is missing. Please contact your backend developer.' });
+      return;
+    }
+    if (!window.confirm(`Delete student ${student.firstName} ${student.lastName}?`)) return;
     try {
-      await studentService.deleteStudent(id);
+      await studentService.deleteStudent(dbId);
       setMessage({ type: 'success', text: 'Student deleted successfully' });
       loadAllStudents();
     } catch (err) {
@@ -111,6 +118,7 @@ export default function LibrarianDashboard() {
       {message && (
         <div style={{ marginBottom: 20, padding: 15, color: message.type === 'error' ? 'crimson' : 'green', backgroundColor: message.type === 'error' ? '#ffebee' : '#f1f8e9', border: `1px solid ${message.type === 'error' ? 'crimson' : 'green'}`, borderRadius: '4px' }}>
           {message.text}
+          <button onClick={() => setMessage(null)} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
         </div>
       )}
 
@@ -120,9 +128,9 @@ export default function LibrarianDashboard() {
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
         <CurrentCount
-        inside={studentsInside.filter(e => !e.exitTime).length}
-        left={studentsInside.filter(e => e.exitTime).length}
-/>
+          inside={studentsInside.filter(e => !e.exitTime).length}
+          left={studentsInside.filter(e => e.exitTime).length}
+        />
         <EntryList entries={studentsInside} />
       </section>
 
@@ -143,12 +151,20 @@ export default function LibrarianDashboard() {
         </p>
       </section>
 
-      <section>
+      <section style={{ marginBottom: 30 }}>
         <h3>👨‍🎓 Student Management</h3>
+        <div style={{ marginBottom: 10, padding: '10px 15px', backgroundColor: '#e3f2fd', borderRadius: '4px', fontSize: '0.9em', color: '#1565c0' }}>
+          ℹ️ Students appear here after self-registering. Select them in Book Management below to borrow or return books.
+        </div>
         <button onClick={loadAllStudents} style={{ padding: '8px 16px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginBottom: 15 }}>
           Reload Students
         </button>
         <StudentList students={studentList} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />
+      </section>
+
+      <section style={{ marginTop: 30 }}>
+        <h3>📖 Book Management</h3>
+        <BookManagement students={studentList} />
       </section>
     </div>
   );

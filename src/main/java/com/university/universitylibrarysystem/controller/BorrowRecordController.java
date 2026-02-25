@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -32,21 +33,25 @@ public class BorrowRecordController {
     private final BookService bookService;
     private final StudentMapper studentMapper;
 
+    
     @PostMapping("/borrow")
     public ResponseEntity<Object> borrowBook(@Valid @RequestBody BorrowRecordDTO dto) {
         try {
-            // FIXED: getStudentById returns StudentDTO
             var studentDTO = studentService.getStudentById(dto.getStudentId());
             Student student = studentMapper.toEntity(studentDTO);
 
             Book book = bookService.findById(dto.getBookId())
                     .orElseThrow(() -> new IllegalArgumentException("Book not found"));
 
-            BorrowRecord record = borrowRecordService.borrowBook(
-                    student,
-                    book,
-                    (int) java.time.temporal.ChronoUnit.DAYS.between(dto.getBorrowDate(), dto.getDueDate())
-            );
+            // Calculate loan days from today to due date
+            // borrowDate is optional — backend uses LocalDateTime.now()
+            long loanDays = dto.getDueDate() != null
+                    ? java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), dto.getDueDate())
+                    : 14; // default 14 days if no due date provided
+
+            if (loanDays < 1) loanDays = 1;
+
+            BorrowRecord record = borrowRecordService.borrowBook(student, book, (int) loanDays);
 
             return ResponseHandler.generateResponse(
                     "Book borrowed successfully", HttpStatus.CREATED, record
@@ -59,6 +64,7 @@ public class BorrowRecordController {
         }
     }
 
+    
     @PutMapping("/{borrowRecordId}/return")
     public ResponseEntity<Object> returnBook(@PathVariable Long borrowRecordId) {
         try {
@@ -73,13 +79,13 @@ public class BorrowRecordController {
         }
     }
 
+    
     @GetMapping("/student/{studentId}")
     public ResponseEntity<Object> getBorrowsByStudent(
             @PathVariable Long studentId,
             Pageable pageable
     ) {
         try {
-            // FIXED: getStudentById returns StudentDTO
             var studentDTO = studentService.getStudentById(studentId);
             Student student = studentMapper.toEntity(studentDTO);
 
@@ -93,6 +99,7 @@ public class BorrowRecordController {
         }
     }
 
+    
     @GetMapping("/student/{studentId}/active")
     public ResponseEntity<Object> getActiveBorrowsByStudent(@PathVariable Long studentId) {
         try {

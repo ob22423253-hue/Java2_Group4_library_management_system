@@ -1,5 +1,6 @@
 package com.university.universitylibrarysystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -19,12 +20,15 @@ public class BorrowRecordDTO {
     @NotNull(message = "Book ID is required")
     private Long bookId;
 
-    @NotNull(message = "Borrow date is required")
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate borrowDate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate returnDate;
 
     @NotNull(message = "Due date is required")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
 
     @Pattern(regexp = "^(BORROWED|RETURNED|OVERDUE)$", 

@@ -48,20 +48,17 @@ public class SecurityConfig {
             .authenticationProvider(studentAuthProvider())
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                // Public auth endpoints (allow both servlet-level and full context path)
-                .requestMatchers("/auth/**", "/api/v1/auth/**").permitAll()
-                // Preflight
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Student-only endpoints (scan)
-                .requestMatchers("/scan").hasAuthority("ROLE_STUDENT")
-                // Librarian endpoints (librarian/admin)
-                .requestMatchers("/librarian/**").hasAnyAuthority(
-                    "ROLE_LIBRARIAN",
-                    "ROLE_ADMIN"
-                )                
-                // Everything else requires authentication
-                .anyRequest().authenticated()
-            )
+    .requestMatchers("/auth/**").permitAll()
+    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    .requestMatchers("/error").permitAll()
+    .requestMatchers("/scan").hasAuthority("ROLE_STUDENT")
+    .requestMatchers("/librarian/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+    .requestMatchers("/borrow-records/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+    .requestMatchers("/books/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+    .requestMatchers("/students/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+    .anyRequest().authenticated()
+)
+    
             // JWT filter before username/password auth
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
