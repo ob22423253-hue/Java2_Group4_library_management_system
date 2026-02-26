@@ -88,7 +88,7 @@ public class AuthService {
         Student student = new Student();
         student.setStudentId(request.getStudentId());
         student.setPassword(passwordEncoder.encode(request.getPassword()));
-        student.setUniversityCardId(request.getUniversityCardId());
+        student.setUniversityCardId("UTG-" + request.getStudentId());
         student.setFirstName(request.getFirstName());
         student.setLastName(request.getLastName());
         student.setEmail(request.getEmail());

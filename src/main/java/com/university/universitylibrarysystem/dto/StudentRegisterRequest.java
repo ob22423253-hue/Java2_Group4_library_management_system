@@ -14,7 +14,7 @@ public class StudentRegisterRequest {
     @NotBlank(message = "Password is required")
     private String password;
     
-    @NotBlank(message = "University Card ID is required")
+    
     private String universityCardId;
     
     @NotBlank(message = "First name is required")
