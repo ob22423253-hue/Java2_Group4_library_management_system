@@ -35,37 +35,41 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // Disable CSRF (React + JWT)
             .csrf(csrf -> csrf.disable())
-            // Enable CORS
             .cors(Customizer.withDefaults())
-            // Stateless session
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Authentication providers
             .authenticationProvider(librarianAuthProvider())
             .authenticationProvider(studentAuthProvider())
-            // Authorization rules
             .authorizeHttpRequests(auth -> auth
-    .requestMatchers("/auth/**").permitAll()
-    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-    .requestMatchers("/error").permitAll()
-    .requestMatchers("/scan").hasAuthority("ROLE_STUDENT")
-    .requestMatchers("/librarian/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
-    .requestMatchers("/borrow-records/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
-    .requestMatchers("/books/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
-    .requestMatchers("/students/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
-    .anyRequest().authenticated()
-)
-    
-            // JWT filter before username/password auth
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/error").permitAll()
+                // Student scan
+                .requestMatchers("/scan").hasAuthority("ROLE_STUDENT")
+                // Librarian-only endpoints
+                .requestMatchers("/librarian/**").hasAnyAuthority(
+                    "ROLE_LIBRARIAN", "ROLE_ADMIN"
+                )
+                // Borrow records — librarian can borrow/return, student can view their own
+                .requestMatchers("/borrow-records/**").hasAnyAuthority(
+                    "ROLE_LIBRARIAN", "ROLE_ADMIN", "ROLE_STUDENT"
+                )
+                // Books — librarian can manage, student can view
+                .requestMatchers("/books/**").hasAnyAuthority(
+                    "ROLE_LIBRARIAN", "ROLE_ADMIN", "ROLE_STUDENT"
+                )
+                // Students — librarian can manage, student can view their own profile
+                .requestMatchers("/students/**").hasAnyAuthority(
+                    "ROLE_LIBRARIAN", "ROLE_ADMIN", "ROLE_STUDENT"
+                )
+                .anyRequest().authenticated()
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    // ------------------- Authentication Providers -------------------
 
     @Bean
     public DaoAuthenticationProvider librarianAuthProvider() {
@@ -83,29 +87,25 @@ public class SecurityConfig {
         return provider;
     }
 
-    // ------------------- Password Encoder -------------------
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ------------------- Authentication Manager -------------------
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ------------------- CORS Configuration -------------------
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-        // Allow local dev origins and use origin patterns to be permissive during development.
-        // Production should restrict this to exact origins.
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173", "http://localhost:3001", "http://localhost:8000", "*"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        // Allow Authorization header for JWT Bearer tokens and common headers
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:3000", "http://localhost:5173",
+            "http://localhost:3001", "http://localhost:8000", "*"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*", "Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 

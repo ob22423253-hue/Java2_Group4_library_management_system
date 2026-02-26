@@ -22,36 +22,31 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * Find active borrow record for a specific book.
-     * 
-     * @param book The book to check
-     * @return Optional of active borrow record if exists
      */
     Optional<BorrowRecord> findByBookAndReturnDateIsNull(Book book);
 
     /**
      * Find all active borrows for a student.
-     * 
-     * @param student The student whose borrows to find
-     * @return List of active borrow records
      */
     List<BorrowRecord> findByStudentAndReturnDateIsNull(Student student);
 
     /**
      * Find all borrows (active and returned) for a student.
-     * Results are pageable for large datasets.
-     * 
-     * @param student The student whose history to find
-     * @param pageable Pagination information
-     * @return Page of borrow records
      */
     Page<BorrowRecord> findByStudent(Student student, Pageable pageable);
 
     /**
+     * Check if a book has any active borrows with a specific status.
+     */
+    boolean existsByBookAndStatus(Book book, BorrowRecord.BorrowStatus status);
+
+    /**
+     * Find all borrow records for a specific book regardless of status.
+     */
+    List<BorrowRecord> findByBook(Book book);
+
+    /**
      * Find overdue borrows.
-     * 
-     * @param currentDate The date to check against
-     * @param pageable Pagination information
-     * @return Page of overdue borrow records
      */
     @Query("SELECT b FROM BorrowRecord b WHERE " +
            "b.dueDate < :currentDate AND b.returnDate IS NULL")
@@ -62,11 +57,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * Get borrowing statistics for a date range.
-     * Returns array of [date, borrow count, return count]
-     * 
-     * @param startDate Start of date range
-     * @param endDate End of date range
-     * @return List of daily statistics
      */
     @Query("SELECT DATE(b.borrowDate) as date, " +
            "COUNT(b.id) as borrows, " +
@@ -81,10 +71,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * Find books borrowed more than specified number of times.
-     * 
-     * @param minBorrows Minimum number of borrows
-     * @param pageable Pagination information
-     * @return Page of borrow records
      */
     @Query("SELECT b.book, COUNT(b.id) as borrowCount " +
            "FROM BorrowRecord b " +
@@ -97,9 +83,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * Calculate average borrowing duration for each book.
-     * Only considers returned books.
-     * 
-     * @return List of [book, average duration in days]
      */
     @Query("SELECT b.book, AVG(DATEDIFF(b.returnDate, b.borrowDate)) " +
            "FROM BorrowRecord b " +
@@ -109,9 +92,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * Find students with most borrows.
-     * 
-     * @param pageable Pagination information
-     * @return Page of [student, borrow count]
      */
     @Query("SELECT b.student, COUNT(b.id) as borrowCount " +
            "FROM BorrowRecord b " +

@@ -19,11 +19,11 @@ public class BorrowRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
@@ -43,11 +43,11 @@ public class BorrowRecord {
     private BorrowStatus status;
 
     // renamed to match repository query
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "processed_by")
     private Librarian processedBy; // previously issuedBy
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "return_processed_by")
     private Librarian returnProcessedBy; // previously returnedTo
 

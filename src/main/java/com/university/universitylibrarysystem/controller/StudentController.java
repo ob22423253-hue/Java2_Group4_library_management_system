@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/students") // server.servlet.context-path=/api/v1 makes final path /api/v1/students
+@RequestMapping("/students")
 @RequiredArgsConstructor
 public class StudentController {
 
@@ -19,35 +19,45 @@ public class StudentController {
     // Get all students
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
-        List<StudentDTO> students = studentService.getAllStudents();
-        return ResponseEntity.ok(students);
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 
-    // Get student by ID
+    // Get student by DB id
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
-        StudentDTO student = studentService.getStudentById(id);
-        return ResponseEntity.ok(student);
+        return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
-    // Get student by university-assigned studentId (e.g. "12345678")
+    // Get student by university studentId (e.g. "12345678")
     @GetMapping("/student-id/{studentId}")
     public ResponseEntity<StudentDTO> getStudentByStudentId(@PathVariable String studentId) {
-        StudentDTO student = studentService.findByStudentId(studentId);
-        return ResponseEntity.ok(student);
+        return ResponseEntity.ok(studentService.findByStudentId(studentId));
     }
 
-    // Get student by RFID UID (convenience endpoint for frontend scanners)
+    // Get student by RFID UID
     @GetMapping("/rfid/{rfidUid}")
     public ResponseEntity<StudentDTO> getStudentByRfid(@PathVariable String rfidUid) {
-        StudentDTO student = studentService.findByRfidUid(rfidUid);
-        return ResponseEntity.ok(student);
+        return ResponseEntity.ok(studentService.findByRfidUid(rfidUid));
     }
 
-    // Create student (use POST for create; you can also add PUT for updates if desired)
+    // Create student
     @PostMapping
     public ResponseEntity<StudentDTO> saveStudent(@Valid @RequestBody StudentDTO studentDTO) {
-        StudentDTO savedStudent = studentService.saveStudent(studentDTO);
-        return ResponseEntity.ok(savedStudent);
+        return ResponseEntity.ok(studentService.saveStudent(studentDTO));
+    }
+
+    // Update student
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentDTO> updateStudent(
+            @PathVariable Long id,
+            @Valid @RequestBody StudentDTO studentDTO) {
+        return ResponseEntity.ok(studentService.updateStudent(id, studentDTO));
+    }
+
+    // Delete student
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+        studentService.deleteStudent(id);
+        return ResponseEntity.noContent().build();
     }
 }

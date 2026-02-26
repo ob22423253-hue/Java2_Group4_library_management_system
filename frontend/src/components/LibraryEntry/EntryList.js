@@ -1,176 +1,139 @@
 import React, { useState } from 'react';
 
+const PAGE_SIZE = 8;
+const COLORS = {
+  primary: '#003d7a', border: '#e0e0e0', gray: '#757575',
+  grayLight: '#f5f5f5', success: '#2e7d32', successLight: '#e8f5e9',
+  warning: '#e65100', warningLight: '#fff3e0', white: '#ffffff',
+};
+
 export default function EntryList({ entries }) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [page, setPage] = useState(0);
 
-  const formatTime = (dateTime) => {
-    if (!dateTime) return '—';
-    try { return new Date(dateTime).toLocaleString(); } catch { return dateTime; }
+  const formatTime = (dt) => {
+    if (!dt) return '—';
+    try { return new Date(dt).toLocaleString(); } catch { return dt; }
   };
 
   const getDuration = (entryTime, exitTime) => {
     if (!exitTime) return 'Still inside';
     try {
-      const diffMs = new Date(exitTime) - new Date(entryTime);
-      const diffMins = Math.floor(diffMs / 60000);
-      const hours = Math.floor(diffMins / 60);
-      const mins = diffMins % 60;
-      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+      const mins = Math.floor((new Date(exitTime) - new Date(entryTime)) / 60000);
+      const h = Math.floor(mins/60), m = mins%60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
     } catch { return '—'; }
   };
 
+  if (!entries || entries.length === 0) {
+    return <div style={{ padding:30, textAlign:'center', color:COLORS.gray }}>No entries recorded yet</div>;
+  }
+
   const filtered = entries.filter(entry => {
-    const student = entry.student;
-    const fullName = `${student?.firstName || ''} ${student?.lastName || ''}`.toLowerCase();
-    const studentId = (student?.studentId || '').toLowerCase();
-    const searchLower = search.toLowerCase();
-
-    const matchesSearch = !search || fullName.includes(searchLower) || studentId.includes(searchLower);
-
-    const matchesStatus =
-      filterStatus === 'ALL' ||
-      (filterStatus === 'INSIDE' && !entry.exitTime) ||
-      (filterStatus === 'LEFT' && entry.exitTime);
-
+    const s = entry.student;
+    const q = search.toLowerCase();
+    const matchesSearch = !search || `${s?.firstName||''} ${s?.lastName||''}`.toLowerCase().includes(q) || (s?.studentId||'').toLowerCase().includes(q);
+    const matchesStatus = filterStatus==='ALL' || (filterStatus==='INSIDE' && !entry.exitTime) || (filterStatus==='LEFT' && entry.exitTime);
     const entryDate = new Date(entry.entryTime);
     const matchesFrom = !fromDate || entryDate >= new Date(fromDate);
-    const matchesTo = !toDate || entryDate <= new Date(toDate + 'T23:59:59');
-
+    const matchesTo = !toDate || entryDate <= new Date(toDate+'T23:59:59');
     return matchesSearch && matchesStatus && matchesFrom && matchesTo;
   });
 
-  const clearFilters = () => {
-    setSearch('');
-    setFilterStatus('ALL');
-    setFromDate('');
-    setToDate('');
-  };
-
-  if (!entries || entries.length === 0) {
-    return <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No entries recorded yet</div>;
-  }
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div>
-      {/* Filter Bar */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '10px',
-        marginBottom: 15, padding: '15px',
-        backgroundColor: '#f5f5f5', borderRadius: '8px'
-      }}>
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search by name or student ID..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{
-            flex: 1, minWidth: '200px', padding: '8px 12px',
-            border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9em'
-          }}
-        />
-
-        {/* Status Filter */}
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9em' }}
-        >
+      <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:14, padding:'14px 16px', backgroundColor:COLORS.grayLight, borderRadius:8, border:`1px solid ${COLORS.border}` }}>
+        <input type="text" placeholder="Search by name or student ID..." value={search}
+          onChange={e => { setSearch(e.target.value); setPage(0); }}
+          style={{ flex:1, minWidth:200, padding:'7px 12px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.88em' }} />
+        <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(0); }}
+          style={{ padding:'7px 12px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.88em' }}>
           <option value="ALL">All Status</option>
           <option value="INSIDE">Currently Inside</option>
           <option value="LEFT">Left</option>
         </select>
-
-        {/* From Date */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <label style={{ fontSize: '0.85em', color: '#666', whiteSpace: 'nowrap' }}>From:</label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={e => setFromDate(e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9em' }}
-          />
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <label style={{ fontSize:'0.82em', color:COLORS.gray }}>From:</label>
+          <input type="date" value={fromDate} onChange={e => { setFromDate(e.target.value); setPage(0); }}
+            style={{ padding:'7px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.88em' }} />
         </div>
-
-        {/* To Date */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <label style={{ fontSize: '0.85em', color: '#666', whiteSpace: 'nowrap' }}>To:</label>
-          <input
-            type="date"
-            value={toDate}
-            onChange={e => setToDate(e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9em' }}
-          />
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <label style={{ fontSize:'0.82em', color:COLORS.gray }}>To:</label>
+          <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); setPage(0); }}
+            style={{ padding:'7px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.88em' }} />
         </div>
-
-        {/* Clear */}
-        <button
-          onClick={clearFilters}
-          style={{
-            padding: '8px 16px', backgroundColor: '#9e9e9e', color: 'white',
-            border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9em'
-          }}
-        >
+        <button onClick={() => { setSearch(''); setFilterStatus('ALL'); setFromDate(''); setToDate(''); setPage(0); }}
+          style={{ padding:'7px 14px', backgroundColor:'#9e9e9e', color:'white', border:'none', borderRadius:5, cursor:'pointer', fontSize:'0.85em', fontWeight:600 }}>
           Clear
         </button>
       </div>
 
-      {/* Results count */}
-      <div style={{ marginBottom: 10, fontSize: '0.85em', color: '#666' }}>
+      <div style={{ marginBottom:8, fontSize:'0.82em', color:COLORS.gray }}>
         Showing {filtered.length} of {entries.length} records
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>
-          No records match your filter
-        </div>
+        <div style={{ padding:30, textAlign:'center', color:COLORS.gray }}>No records match your filter</div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#003d7a', color: 'white' }}>
-                <th style={{ padding: 12, textAlign: 'left' }}>Student ID</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>Name</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>Department</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Entry Time</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Exit Time</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Duration</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((entry, idx) => {
-                const isStillInside = !entry.exitTime;
-                return (
-                  <tr key={idx} style={{ backgroundColor: isStillInside ? '#f0f8ff' : 'white', borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: 12 }}><strong>{entry.student?.studentId || '—'}</strong></td>
-                    <td style={{ padding: 12 }}>
-                      {entry.student?.firstName && entry.student?.lastName
-                        ? `${entry.student.firstName} ${entry.student.lastName}`
-                        : entry.student?.firstName || '—'}
-                    </td>
-                    <td style={{ padding: 12 }}>{entry.student?.department || '—'}</td>
-                    <td style={{ padding: 12, textAlign: 'center', fontSize: '0.9em' }}>{formatTime(entry.entryTime)}</td>
-                    <td style={{ padding: 12, textAlign: 'center', fontSize: '0.9em' }}>{formatTime(entry.exitTime)}</td>
-                    <td style={{ padding: 12, textAlign: 'center', fontWeight: 'bold' }}>{getDuration(entry.entryTime, entry.exitTime)}</td>
-                    <td style={{ padding: 12, textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 12px', borderRadius: '20px',
-                        backgroundColor: isStillInside ? '#4caf50' : '#ff9800',
-                        color: 'white', fontSize: '0.85em', fontWeight: 'bold'
-                      }}>
-                        {isStillInside ? '✓ Inside' : 'Left'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div style={{ overflowX:'auto', borderRadius:8, border:`1px solid ${COLORS.border}`, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', backgroundColor:COLORS.white }}>
+              <thead>
+                <tr style={{ backgroundColor:COLORS.primary, color:'white' }}>
+                  {['Student ID','Name','Department','Entry Time','Exit Time','Duration','Status'].map(h => (
+                    <th key={h} style={{ padding:'11px 14px', textAlign:'left', fontSize:'0.78em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', whiteSpace:'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((entry, idx) => {
+                  const inside = !entry.exitTime;
+                  return (
+                    <tr key={idx} style={{ borderBottom:`1px solid ${COLORS.border}`, backgroundColor:inside?'#f0f8ff':idx%2===0?COLORS.white:'#fafafa' }}>
+                      <td style={{ padding:'11px 14px', fontWeight:600, fontFamily:'monospace', fontSize:'0.88em', color:COLORS.primary }}>{entry.student?.studentId||'—'}</td>
+                      <td style={{ padding:'11px 14px', fontWeight:500, fontSize:'0.9em' }}>
+                        {entry.student?.firstName && entry.student?.lastName
+                          ? `${entry.student.firstName} ${entry.student.lastName}`
+                          : entry.student?.firstName||'—'}
+                      </td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.88em', color:COLORS.gray }}>{entry.student?.department||'—'}</td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.82em', whiteSpace:'nowrap' }}>{formatTime(entry.entryTime)}</td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.82em', whiteSpace:'nowrap' }}>{formatTime(entry.exitTime)}</td>
+                      <td style={{ padding:'11px 14px', fontWeight:600, fontSize:'0.85em' }}>{getDuration(entry.entryTime, entry.exitTime)}</td>
+                      <td style={{ padding:'11px 14px' }}>
+                        <span style={{ display:'inline-block', padding:'3px 12px', borderRadius:20, fontSize:'0.78em', fontWeight:700, backgroundColor:inside?COLORS.successLight:COLORS.warningLight, color:inside?COLORS.success:COLORS.warning }}>
+                          {inside ? '✓ Inside' : 'Left'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div style={{ marginTop:12, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontSize:'0.82em', color:COLORS.gray }}>Page {page+1} of {totalPages} · {filtered.length} records</span>
+              <div style={{ display:'flex', gap:6 }}>
+                <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={page===0}
+                  style={{ padding:'5px 14px', border:`1px solid ${COLORS.border}`, borderRadius:5, cursor:page===0?'not-allowed':'pointer', backgroundColor:page===0?COLORS.grayLight:COLORS.white, fontWeight:600, fontSize:'0.85em' }}>← Prev</button>
+                {Array.from({length:totalPages},(_,i) => (
+                  <button key={i} onClick={() => setPage(i)}
+                    style={{ padding:'5px 11px', border:`1px solid ${i===page?COLORS.primary:COLORS.border}`, borderRadius:5, cursor:'pointer', backgroundColor:i===page?COLORS.primary:COLORS.white, color:i===page?'white':'#222', fontWeight:600, fontSize:'0.85em' }}>{i+1}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(totalPages-1,p+1))} disabled={page===totalPages-1}
+                  style={{ padding:'5px 14px', border:`1px solid ${COLORS.border}`, borderRadius:5, cursor:page===totalPages-1?'not-allowed':'pointer', backgroundColor:page===totalPages-1?COLORS.grayLight:COLORS.white, fontWeight:600, fontSize:'0.85em' }}>Next →</button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

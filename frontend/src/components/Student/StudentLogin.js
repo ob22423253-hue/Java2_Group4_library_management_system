@@ -26,11 +26,14 @@ export default function StudentLogin() {
       const normalizedRole = response.role?.replace('ROLE_', '') || 'STUDENT';
 
       // Step 2: Fetch full student profile
+      // AuthResponse returns studentId in the 'username' field
+      const studentIdFromResponse = response.username ?? response.studentId ?? form.studentId;
       localStorage.setItem('token', response.token);
+
       let fullProfile = null;
       try {
         const profileRes = await fetch(
-          `http://localhost:8080/api/v1/students/student-id/${response.studentId}`,
+          `/api/v1/students/student-id/${studentIdFromResponse}`,
           {
             method: 'GET',
             headers: {
@@ -48,9 +51,10 @@ export default function StudentLogin() {
       }
 
       // Step 3: Save complete user info to AuthContext
+      // fullProfile.id is the numeric database ID needed for borrow records
       const userInfo = {
-        id: fullProfile?.id ?? response.studentId,
-        studentId: fullProfile?.studentId ?? response.studentId,
+        id: fullProfile?.id ?? null,
+        studentId: fullProfile?.studentId ?? studentIdFromResponse,
         email: fullProfile?.email ?? null,
         department: fullProfile?.department?.name ?? fullProfile?.department ?? null,
         universityCardId: fullProfile?.universityCardId ?? null,

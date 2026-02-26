@@ -1,8 +1,10 @@
 package com.university.universitylibrarysystem.service.impl;
 
 import com.university.universitylibrarysystem.entity.Book;
+import com.university.universitylibrarysystem.entity.BorrowRecord;
 import com.university.universitylibrarysystem.dto.BookDTO;
 import com.university.universitylibrarysystem.repository.BookRepository;
+import com.university.universitylibrarysystem.repository.BorrowRecordRepository;
 import com.university.universitylibrarysystem.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,16 +22,19 @@ import java.util.Optional;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final BorrowRecordRepository borrowRecordRepository;
 
     @Autowired
-    public BookServiceImpl(BookRepository bookRepository) {
+    public BookServiceImpl(BookRepository bookRepository,
+                           BorrowRecordRepository borrowRecordRepository) {
         this.bookRepository = bookRepository;
+        this.borrowRecordRepository = borrowRecordRepository;
     }
 
     @Override
     public Book createBook(BookDTO bookDTO) {
         Book book = mapToEntity(bookDTO);
-        book.setAvailableCopies(book.getTotalCopies()); // Initially all copies are available
+        book.setAvailableCopies(book.getTotalCopies());
         return bookRepository.save(book);
     }
 
@@ -37,7 +42,7 @@ public class BookServiceImpl implements BookService {
     public Book updateBook(Long id, BookDTO bookDTO) {
         Book existingBook = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-        
+
         updateBookFromDTO(existingBook, bookDTO);
         return bookRepository.save(existingBook);
     }
@@ -53,8 +58,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Page<Book> searchBooks(String title, String author, String category, 
-                                boolean available, Pageable pageable) {
+    public Page<Book> searchBooks(String title, String author, String category,
+                                  boolean available, Pageable pageable) {
         return bookRepository.searchBooks(title, author, category, available, pageable);
     }
 
@@ -84,9 +89,9 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Page<Book> getBooksNeedingMaintenance(int conditionThreshold, 
-                                                int borrowThreshold, 
-                                                Pageable pageable) {
+    public Page<Book> getBooksNeedingMaintenance(int conditionThreshold,
+                                                 int borrowThreshold,
+                                                 Pageable pageable) {
         return bookRepository.findBooksNeedingMaintenance(conditionThreshold, borrowThreshold, pageable);
     }
 
@@ -101,8 +106,12 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
 
-        if (book.getTotalCopies() > book.getAvailableCopies()) {
-            throw new RuntimeException("Cannot delete book with active borrows");
+        // Only block deletion if there are CURRENTLY borrowed (active) copies
+        boolean hasActiveBorrows = borrowRecordRepository
+            .existsByBookAndStatus(book, BorrowRecord.BorrowStatus.BORROWED);
+
+        if (hasActiveBorrows) {
+            throw new RuntimeException("Cannot delete book while it is currently borrowed by a student");
         }
 
         bookRepository.delete(book);
