@@ -50,7 +50,7 @@ export default function BookManagement({ students }) {
   const [editingBook, setEditingBook] = useState(null);
   const [bookForm, setBookForm] = useState({
     title:'', author:'', isbn:'', category:'', publisher:'',
-    totalCopies:1, locationCode:'', publicationYear:new Date().getFullYear()
+    totalCopies:1, availableCopies:1, locationCode:'', publicationYear:new Date().getFullYear()
   });
 
   const [borrowForm, setBorrowForm] = useState({ studentId:'', bookId:'', dueDate:'' });
@@ -78,25 +78,51 @@ export default function BookManagement({ students }) {
 
   function openAddBook() {
     setEditingBook(null);
-    setBookForm({ title:'', author:'', isbn:'', category:'', publisher:'', totalCopies:1, locationCode:'', publicationYear:new Date().getFullYear() });
+    setBookForm({
+      title:'', author:'', isbn:'', category:'', publisher:'',
+      totalCopies:1, availableCopies:1, locationCode:'', publicationYear:new Date().getFullYear()
+    });
     setShowBookForm(true);
   }
 
   function openEditBook(book) {
     setEditingBook(book);
-    setBookForm({ title:book.title||'', author:book.author||'', isbn:book.isbn||'', category:book.category||'', publisher:book.publisher||'', totalCopies:book.totalCopies||1, locationCode:book.locationCode||'', publicationYear:book.publicationYear||new Date().getFullYear() });
+    setBookForm({
+      title:book.title||'',
+      author:book.author||'',
+      isbn:book.isbn||'',
+      category:book.category||'',
+      publisher:book.publisher||'',
+      totalCopies:book.totalCopies||1,
+      availableCopies:book.availableCopies||0,
+      locationCode:book.locationCode||'',
+      publicationYear:book.publicationYear||new Date().getFullYear()
+    });
     setShowBookForm(true);
   }
 
   async function handleBookSubmit() {
     if (!bookForm.title || !bookForm.author || !bookForm.isbn) { setMessage({ type:'error', text:'Title, Author and ISBN are required' }); return; }
     if (!bookForm.locationCode) { setMessage({ type:'error', text:'Location Code is required (e.g. FIC-001)' }); return; }
+    const total = parseInt(bookForm.totalCopies);
+    const available = parseInt(bookForm.availableCopies);
+    if (available > total) { setMessage({ type:'error', text:'Available copies cannot be more than total copies' }); return; }
     try {
       if (editingBook) {
-        await bookService.updateBook(editingBook.id, { ...bookForm, totalCopies:parseInt(bookForm.totalCopies), publicationYear:parseInt(bookForm.publicationYear) });
+        await bookService.updateBook(editingBook.id, {
+          ...bookForm,
+          totalCopies: total,
+          availableCopies: available,
+          publicationYear: parseInt(bookForm.publicationYear)
+        });
         setMessage({ type:'success', text:'Book updated successfully' });
       } else {
-        await bookService.addBook({ ...bookForm, availableCopies:parseInt(bookForm.totalCopies), totalCopies:parseInt(bookForm.totalCopies), publicationYear:parseInt(bookForm.publicationYear) });
+        await bookService.addBook({
+          ...bookForm,
+          totalCopies: total,
+          availableCopies: available,
+          publicationYear: parseInt(bookForm.publicationYear)
+        });
         setMessage({ type:'success', text:'Book added successfully' });
       }
       setShowBookForm(false);
@@ -228,6 +254,7 @@ export default function BookManagement({ students }) {
                   {label:'Category',key:'category',type:'text',placeholder:'e.g. Fiction'},
                   {label:'Publisher',key:'publisher',type:'text',placeholder:'e.g. Penguin Books'},
                   {label:'Total Copies',key:'totalCopies',type:'number',placeholder:'1'},
+                  {label:'Available Copies',key:'availableCopies',type:'number',placeholder:'1'},
                 ].map(({label,key,type,placeholder}) => (
                   <div key={key}>
                     <label style={{ fontSize:'0.82em', color:COLORS.gray, display:'block', marginBottom:4 }}>{label}</label>

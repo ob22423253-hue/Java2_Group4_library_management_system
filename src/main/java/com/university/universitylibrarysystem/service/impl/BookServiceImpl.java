@@ -13,10 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
-/**
- * Implementation of BookService interface.
- * Provides business logic for book management operations.
- */
 @Service
 @Transactional
 public class BookServiceImpl implements BookService {
@@ -42,7 +38,6 @@ public class BookServiceImpl implements BookService {
     public Book updateBook(Long id, BookDTO bookDTO) {
         Book existingBook = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-
         updateBookFromDTO(existingBook, bookDTO);
         return bookRepository.save(existingBook);
     }
@@ -68,11 +63,9 @@ public class BookServiceImpl implements BookService {
     public void markAsBorrowed(Long id, int copies) {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-
         if (book.getAvailableCopies() < copies) {
             throw new RuntimeException("Not enough copies available");
         }
-
         book.setAvailableCopies(book.getAvailableCopies() - copies);
         book.setTotalBorrows(book.getTotalBorrows() + copies);
         bookRepository.save(book);
@@ -83,7 +76,6 @@ public class BookServiceImpl implements BookService {
     public void markAsReturned(Long id, int copies, int condition) {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-
         book.setAvailableCopies(book.getAvailableCopies() + copies);
         bookRepository.save(book);
     }
@@ -105,15 +97,11 @@ public class BookServiceImpl implements BookService {
     public void deleteBook(Long id) {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-
-        // Only block deletion if there are CURRENTLY borrowed (active) copies
         boolean hasActiveBorrows = borrowRecordRepository
             .existsByBookAndStatus(book, BorrowRecord.BorrowStatus.BORROWED);
-
         if (hasActiveBorrows) {
             throw new RuntimeException("Cannot delete book while it is currently borrowed by a student");
         }
-
         bookRepository.delete(book);
     }
 
@@ -127,19 +115,16 @@ public class BookServiceImpl implements BookService {
     public Book updateBookCondition(Long id, int newCondition, String notes) {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
-
         book.setNotes(notes);
         return bookRepository.save(book);
     }
 
-    // Helper method to map DTO to Entity
     private Book mapToEntity(BookDTO dto) {
         Book book = new Book();
         updateBookFromDTO(book, dto);
         return book;
     }
 
-    // Helper method to update Entity from DTO
     private void updateBookFromDTO(Book book, BookDTO dto) {
         book.setTitle(dto.getTitle());
         book.setAuthor(dto.getAuthor());
@@ -148,10 +133,19 @@ public class BookServiceImpl implements BookService {
         book.setPublicationYear(dto.getPublicationYear());
         book.setPublisher(dto.getPublisher());
         book.setLocationCode(dto.getLocationCode());
-        book.setTotalCopies(dto.getTotalCopies());
         book.setRfidTag(dto.getRfidTag());
         book.setDescription(dto.getDescription());
         book.setCoverImageUrl(dto.getCoverImageUrl());
         book.setNotes(dto.getNotes());
+
+        if (dto.getTotalCopies() != null) {
+            int oldTotal = book.getTotalCopies();
+            int newTotal = dto.getTotalCopies();
+            int oldAvailable = book.getAvailableCopies();
+            int borrowed = Math.max(0, oldTotal - oldAvailable);
+            int newAvailable = Math.max(0, newTotal - borrowed);
+            book.setTotalCopies(newTotal);
+            book.setAvailableCopies(newAvailable);
+        }
     }
-}
+} 
