@@ -35,7 +35,11 @@ export default function EntryList({ entries }) {
   const filtered = entries.filter(entry => {
     const s = entry.student;
     const q = search.toLowerCase();
-    const matchesSearch = !search || `${s?.firstName||''} ${s?.lastName||''}`.toLowerCase().includes(q) || (s?.studentId||'').toLowerCase().includes(q);
+    const matchesSearch = !search ||
+      `${s?.firstName||''} ${s?.lastName||''}`.toLowerCase().includes(q) ||
+      (s?.studentId||'').toLowerCase().includes(q) ||
+      (s?.department||'').toLowerCase().includes(q) ||
+      (s?.major||'').toLowerCase().includes(q);
     const matchesStatus = filterStatus==='ALL' || (filterStatus==='INSIDE' && !entry.exitTime) || (filterStatus==='LEFT' && entry.exitTime);
     const entryDate = new Date(entry.entryTime);
     const matchesFrom = !fromDate || entryDate >= new Date(fromDate);
@@ -46,10 +50,12 @@ export default function EntryList({ entries }) {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
+  const headers = ['Student ID','Name','Department','Major','Minor','Year','Entry Time','Exit Time','Duration','Status'];
+
   return (
     <div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:14, padding:'14px 16px', backgroundColor:COLORS.grayLight, borderRadius:8, border:`1px solid ${COLORS.border}` }}>
-        <input type="text" placeholder="Search by name or student ID..." value={search}
+        <input type="text" placeholder="Search by name, ID, department, major..." value={search}
           onChange={e => { setSearch(e.target.value); setPage(0); }}
           style={{ flex:1, minWidth:200, padding:'7px 12px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.88em' }} />
         <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(0); }}
@@ -86,7 +92,7 @@ export default function EntryList({ entries }) {
             <table style={{ width:'100%', borderCollapse:'collapse', backgroundColor:COLORS.white }}>
               <thead>
                 <tr style={{ backgroundColor:COLORS.primary, color:'white' }}>
-                  {['Student ID','Name','Department','Entry Time','Exit Time','Duration','Status'].map(h => (
+                  {headers.map(h => (
                     <th key={h} style={{ padding:'11px 14px', textAlign:'left', fontSize:'0.78em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', whiteSpace:'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -103,6 +109,11 @@ export default function EntryList({ entries }) {
                           : entry.student?.firstName||'—'}
                       </td>
                       <td style={{ padding:'11px 14px', fontSize:'0.88em', color:COLORS.gray }}>{entry.student?.department||'—'}</td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.88em' }}>{entry.student?.major||'—'}</td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.88em' }}>{entry.student?.minorSubject||'—'}</td>
+                      <td style={{ padding:'11px 14px', fontSize:'0.88em', textAlign:'center' }}>
+                        {entry.student?.yearLevel ? `Year ${entry.student.yearLevel}` : '—'}
+                      </td>
                       <td style={{ padding:'11px 14px', fontSize:'0.82em', whiteSpace:'nowrap' }}>{formatTime(entry.entryTime)}</td>
                       <td style={{ padding:'11px 14px', fontSize:'0.82em', whiteSpace:'nowrap' }}>{formatTime(entry.exitTime)}</td>
                       <td style={{ padding:'11px 14px', fontWeight:600, fontSize:'0.85em' }}>{getDuration(entry.entryTime, entry.exitTime)}</td>

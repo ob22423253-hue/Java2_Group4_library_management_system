@@ -119,6 +119,10 @@ public class ScanController {
                     studentMap.put("lastName", s.getLastName());
                     studentMap.put("department", s.getDepartment());
                     studentMap.put("email", s.getEmail());
+                    studentMap.put("major", s.getMajor());
+                    studentMap.put("minorSubject", s.getMinorSubject());
+                    studentMap.put("yearLevel", s.getYearLevel());
+                    studentMap.put("phoneNumber", s.getPhoneNumber());
                     map.put("student", studentMap);
                 } else {
                     map.put("student", null);

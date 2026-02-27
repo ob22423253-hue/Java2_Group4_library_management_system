@@ -1,6 +1,4 @@
 package com.university.universitylibrarysystem.entity;
-import com.university.universitylibrarysystem.entity.Student;
-
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -54,6 +52,15 @@ public class Student {
     @NotBlank(message = "Department is required")
     private String department;
 
+    @Column(name = "major", length = 100)
+    private String major;
+
+    @Column(name = "minor_subject", length = 100)
+    private String minorSubject;
+
+    @Column(name = "year_level")
+    private Integer yearLevel;
+
     @Column(name = "photo_url")
     private String photoUrl;
 
@@ -85,4 +92,3 @@ public class Student {
         updatedAt = LocalDateTime.now();
     }
 }
- 

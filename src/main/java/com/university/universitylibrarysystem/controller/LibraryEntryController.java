@@ -1,6 +1,7 @@
 package com.university.universitylibrarysystem.controller;
 
 import com.university.universitylibrarysystem.dto.LibraryEntryDTO;
+import com.university.universitylibrarysystem.dto.StudentDTO;
 import com.university.universitylibrarysystem.entity.LibraryEntry;
 import com.university.universitylibrarysystem.entity.LibraryEntry.EntryMethod;
 import com.university.universitylibrarysystem.entity.Student;
@@ -226,15 +227,33 @@ public class LibraryEntryController {
             return ResponseHandler.generateResponse("Error retrieving entry: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
+private LibraryEntryDTO mapToDTO(LibraryEntry e) {
+    LibraryEntryDTO dto = new LibraryEntryDTO();
+    dto.setId(e.getId());
+    dto.setStudentId(e.getStudent() != null ? e.getStudent().getId() : null);
+    dto.setEntryType(e.isInLibrary() ? "IN" : "OUT");
+    dto.setTimestamp(e.getEntryTime());
+    dto.setEntryTime(e.getEntryTime());
+    dto.setExitTime(e.getExitTime());
+    dto.setGateLocation(null);
+    dto.setNotes(e.getNotes());
 
-    private LibraryEntryDTO mapToDTO(LibraryEntry e) {
-        LibraryEntryDTO dto = new LibraryEntryDTO();
-        dto.setId(e.getId());
-        dto.setStudentId(e.getStudent() != null ? e.getStudent().getId() : null);
-        dto.setEntryType(e.isInLibrary() ? "IN" : "OUT");
-        dto.setTimestamp(e.getEntryTime());
-        dto.setGateLocation(null);
-        dto.setNotes(e.getNotes());
-        return dto;
+    if (e.getStudent() != null) {
+        Student s = e.getStudent();
+        StudentDTO studentDTO = new StudentDTO();
+        studentDTO.setId(s.getId());
+        studentDTO.setStudentId(s.getStudentId());
+        studentDTO.setFirstName(s.getFirstName());
+        studentDTO.setLastName(s.getLastName());
+        studentDTO.setEmail(s.getEmail());
+        studentDTO.setDepartment(s.getDepartment());
+        studentDTO.setMajor(s.getMajor());
+        studentDTO.setMinorSubject(s.getMinorSubject());
+        studentDTO.setYearLevel(s.getYearLevel());
+        studentDTO.setPhoneNumber(s.getPhoneNumber());
+        dto.setStudent(studentDTO);
     }
+
+    return dto;
+}
 }

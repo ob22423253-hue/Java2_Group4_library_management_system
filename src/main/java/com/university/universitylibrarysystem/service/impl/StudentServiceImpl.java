@@ -21,7 +21,6 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
 
-    // Manual mapping to bypass MapStruct issues
     private StudentDTO manualToDto(Student s) {
         StudentDTO dto = new StudentDTO();
         dto.setId(s.getId());
@@ -30,6 +29,9 @@ public class StudentServiceImpl implements StudentService {
         dto.setLastName(s.getLastName());
         dto.setEmail(s.getEmail());
         dto.setDepartment(s.getDepartment());
+        dto.setMajor(s.getMajor());
+        dto.setMinorSubject(s.getMinorSubject());
+        dto.setYearLevel(s.getYearLevel());
         dto.setUniversityCardId(s.getUniversityCardId());
         dto.setPhoneNumber(s.getPhoneNumber());
         dto.setPhotoUrl(s.getPhotoUrl());
@@ -78,6 +80,9 @@ public class StudentServiceImpl implements StudentService {
         existing.setStudentId(dto.getStudentId());
         existing.setEmail(dto.getEmail());
         existing.setDepartment(dto.getDepartment());
+        existing.setMajor(dto.getMajor());
+        existing.setMinorSubject(dto.getMinorSubject());
+        existing.setYearLevel(dto.getYearLevel());
         existing.setUniversityCardId(dto.getUniversityCardId());
         existing.setPhoneNumber(dto.getPhoneNumber());
         existing.setPhotoUrl(dto.getPhotoUrl());

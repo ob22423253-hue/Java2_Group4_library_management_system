@@ -11,6 +11,7 @@ const COLORS = {
 };
 
 const PAGE_SIZE = 7;
+const BOOK_PAGE_SIZE = 6;
 
 export default function StudentDashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -22,6 +23,13 @@ export default function StudentDashboard() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Books state
+  const [books, setBooks] = useState([]);
+  const [booksLoading, setBooksLoading] = useState(false);
+  const [booksError, setBooksError] = useState(null);
+  const [bookPage, setBookPage] = useState(0);
+  const [bookSearch, setBookSearch] = useState('');
 
   const displayName = student?.firstName && student?.lastName
     ? `${student.firstName} ${student.lastName}`
@@ -49,7 +57,31 @@ export default function StudentDashboard() {
     }
   }
 
-  useEffect(() => { loadAllBorrows(); }, [student?.id]);
+  async function loadBooks() {
+    setBooksLoading(true);
+    setBooksError(null);
+    try {
+      const res = await fetch('/api/v1/books?size=100', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const list = data?.content ?? data?.data?.content ?? data?.data ?? (Array.isArray(data) ? data : []);
+        setBooks(Array.isArray(list) ? list : []);
+      } else {
+        setBooksError('Failed to load books');
+      }
+    } catch {
+      setBooksError('Failed to load books');
+    } finally {
+      setBooksLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAllBorrows();
+    loadBooks();
+  }, [student?.id]);
 
   const filtered = allBorrows.filter(r => {
     if (statusFilter === 'ALL') return true;
@@ -66,6 +98,20 @@ export default function StudentDashboard() {
   const overdueCount = allBorrows.filter(r => r.status === 'OVERDUE').length;
   const returnedCount = allBorrows.filter(r => r.status === 'RETURNED').length;
 
+  // Book filtering and pagination
+  const filteredBooks = books.filter(b => {
+    if (!bookSearch) return true;
+    const q = bookSearch.toLowerCase();
+    return (
+      (b.title || '').toLowerCase().includes(q) ||
+      (b.author || '').toLowerCase().includes(q) ||
+      (b.category || '').toLowerCase().includes(q) ||
+      (b.isbn || '').toLowerCase().includes(q)
+    );
+  });
+  const totalBookPages = Math.ceil(filteredBooks.length / BOOK_PAGE_SIZE);
+  const paginatedBooks = filteredBooks.slice(bookPage * BOOK_PAGE_SIZE, bookPage * BOOK_PAGE_SIZE + BOOK_PAGE_SIZE);
+
   function statusBadge(record) {
     if (record.returnDate || record.status === 'RETURNED')
       return <span style={{ display:'inline-block', padding:'3px 12px', borderRadius:20, fontSize:'0.78em', fontWeight:700, color:COLORS.success, backgroundColor:COLORS.successLight }}>✓ Returned</span>;
@@ -73,6 +119,15 @@ export default function StudentDashboard() {
     if (isOverdue)
       return <span style={{ display:'inline-block', padding:'3px 12px', borderRadius:20, fontSize:'0.78em', fontWeight:700, color:COLORS.danger, backgroundColor:COLORS.dangerLight }}>⚠ Overdue</span>;
     return <span style={{ display:'inline-block', padding:'3px 12px', borderRadius:20, fontSize:'0.78em', fontWeight:700, color:COLORS.primary, backgroundColor:COLORS.primaryLight }}>📖 Borrowed</span>;
+  }
+
+  function availabilityBadge(book) {
+    const available = (book.availableCopies ?? book.totalCopies ?? 0) > 0;
+    return (
+      <span style={{ display:'inline-block', padding:'3px 12px', borderRadius:20, fontSize:'0.78em', fontWeight:700, color: available ? COLORS.success : COLORS.danger, backgroundColor: available ? COLORS.successLight : COLORS.dangerLight }}>
+        {available ? '✓ Available' : '✗ Unavailable'}
+      </span>
+    );
   }
 
   return (
@@ -122,7 +177,10 @@ export default function StudentDashboard() {
               { label:'Full Name', value: displayName },
               { label:'Email', value: student?.email ?? 'N/A' },
               { label:'Department', value: student?.department ?? 'N/A' },
-              { label:'Card ID', value: student?.universityCardId ?? 'N/A' },
+              { label:'Major', value: student?.major ?? 'N/A' },
+              { label:'Minor', value: student?.minorSubject ?? 'N/A' },
+              { label:'Year', value: student?.yearLevel ? `Year ${student.yearLevel}` : 'N/A' },
+              { label:'Phone', value: student?.phoneNumber ?? 'N/A' },
             ].map(f => (
               <div key={f.label}>
                 <div style={{ fontSize:'0.72em', color:COLORS.gray, marginBottom:2, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>{f.label}</div>
@@ -145,6 +203,89 @@ export default function StudentDashboard() {
               🚶 Scan Exit
             </button>
           </div>
+        </div>
+
+        {/* Book Catalog */}
+        <div style={{ backgroundColor:COLORS.white, borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)', border:`1px solid ${COLORS.border}`, overflow:'hidden', marginBottom:24 }}>
+          <div style={{ padding:'16px 24px', borderBottom:`1px solid ${COLORS.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+            <h3 style={{ margin:0, color:COLORS.primary, fontSize:'0.9em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em' }}>📖 Library Book Catalog</h3>
+            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <input
+                type="text"
+                placeholder="Search by title, author, category, ISBN..."
+                value={bookSearch}
+                onChange={e => { setBookSearch(e.target.value); setBookPage(0); }}
+                style={{ padding:'6px 12px', border:`1px solid ${COLORS.border}`, borderRadius:5, fontSize:'0.85em', minWidth:250 }}
+              />
+              <button onClick={loadBooks}
+                style={{ padding:'6px 14px', backgroundColor:'#2196f3', color:'white', border:'none', borderRadius:20, cursor:'pointer', fontSize:'0.78em', fontWeight:600 }}>
+                ↻ Refresh
+              </button>
+            </div>
+          </div>
+
+          {booksLoading && <div style={{ padding:40, textAlign:'center', color:COLORS.gray }}>Loading books...</div>}
+          {booksError && <div style={{ padding:20, margin:16, backgroundColor:COLORS.dangerLight, color:COLORS.danger, borderRadius:6, textAlign:'center' }}>{booksError}</div>}
+
+          {!booksLoading && !booksError && (
+            <>
+              <div style={{ padding:'8px 24px', fontSize:'0.82em', color:COLORS.gray, borderBottom:`1px solid ${COLORS.border}` }}>
+                Showing {filteredBooks.length} of {books.length} books
+              </div>
+              {paginatedBooks.length === 0 ? (
+                <div style={{ padding:40, textAlign:'center', color:COLORS.gray }}>
+                  {books.length === 0 ? 'No books in the library catalog yet' : 'No books match your search'}
+                </div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:16, padding:20 }}>
+                  {paginatedBooks.map((book, idx) => (
+                    <div key={book.id || idx} style={{ border:`1px solid ${COLORS.border}`, borderRadius:8, padding:'16px', backgroundColor:'#fafafa', boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                        <div style={{ fontSize:'1.4em' }}>📗</div>
+                        {availabilityBadge(book)}
+                      </div>
+                      <div style={{ fontWeight:700, fontSize:'0.95em', color:'#222', marginBottom:4, lineHeight:1.3 }}>{book.title || '—'}</div>
+                      <div style={{ fontSize:'0.85em', color:COLORS.gray, marginBottom:8 }}>by {book.author || '—'}</div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 12px', fontSize:'0.78em', color:COLORS.gray }}>
+                        <div><span style={{ fontWeight:600, color:'#555' }}>Category:</span> {book.category || '—'}</div>
+                        <div><span style={{ fontWeight:600, color:'#555' }}>Year:</span> {book.publicationYear || '—'}</div>
+                        <div><span style={{ fontWeight:600, color:'#555' }}>ISBN:</span> {book.isbn || '—'}</div>
+                        <div><span style={{ fontWeight:600, color:'#555' }}>Copies:</span> {book.availableCopies ?? book.totalCopies ?? '—'}</div>
+                        <div style={{ gridColumn:'1/-1' }}><span style={{ fontWeight:600, color:'#555' }}>Location:</span> {book.locationCode || '—'}</div>
+                      </div>
+                      {book.description && (
+                        <div style={{ marginTop:8, fontSize:'0.78em', color:COLORS.gray, borderTop:`1px solid ${COLORS.border}`, paddingTop:8, lineHeight:1.4 }}>
+                          {book.description.length > 100 ? book.description.substring(0, 100) + '...' : book.description}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {totalBookPages > 1 && (
+                <div style={{ padding:'14px 24px', borderTop:`1px solid ${COLORS.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontSize:'0.82em', color:COLORS.gray }}>Page {bookPage+1} of {totalBookPages}</span>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={() => setBookPage(p => Math.max(0,p-1))} disabled={bookPage===0}
+                      style={{ padding:'5px 14px', border:`1px solid ${COLORS.border}`, borderRadius:5, cursor:bookPage===0?'not-allowed':'pointer', backgroundColor:bookPage===0?COLORS.grayLight:'white', fontWeight:600, fontSize:'0.85em' }}>
+                      ← Prev
+                    </button>
+                    {Array.from({ length:totalBookPages }, (_,i) => (
+                      <button key={i} onClick={() => setBookPage(i)}
+                        style={{ padding:'5px 11px', border:`1px solid ${i===bookPage?COLORS.primary:COLORS.border}`, borderRadius:5, cursor:'pointer', backgroundColor:i===bookPage?COLORS.primary:'white', color:i===bookPage?'white':'#222', fontWeight:600, fontSize:'0.85em' }}>
+                        {i+1}
+                      </button>
+                    ))}
+                    <button onClick={() => setBookPage(p => Math.min(totalBookPages-1,p+1))} disabled={bookPage===totalBookPages-1}
+                      style={{ padding:'5px 14px', border:`1px solid ${COLORS.border}`, borderRadius:5, cursor:bookPage===totalBookPages-1?'not-allowed':'pointer', backgroundColor:bookPage===totalBookPages-1?COLORS.grayLight:'white', fontWeight:600, fontSize:'0.85em' }}>
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Borrow History Table */}

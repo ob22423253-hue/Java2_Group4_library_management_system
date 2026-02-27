@@ -26,7 +26,6 @@ export default function StudentLogin() {
       const normalizedRole = response.role?.replace('ROLE_', '') || 'STUDENT';
 
       // Step 2: Fetch full student profile
-      // AuthResponse returns studentId in the 'username' field
       const studentIdFromResponse = response.username ?? response.studentId ?? form.studentId;
       localStorage.setItem('token', response.token);
 
@@ -51,15 +50,17 @@ export default function StudentLogin() {
       }
 
       // Step 3: Save complete user info to AuthContext
-      // fullProfile.id is the numeric database ID needed for borrow records
       const userInfo = {
         id: fullProfile?.id ?? null,
         studentId: fullProfile?.studentId ?? studentIdFromResponse,
         email: fullProfile?.email ?? null,
         department: fullProfile?.department?.name ?? fullProfile?.department ?? null,
-        universityCardId: fullProfile?.universityCardId ?? null,
         firstName: fullProfile?.firstName ?? null,
         lastName: fullProfile?.lastName ?? null,
+        major: fullProfile?.major ?? null,
+        minorSubject: fullProfile?.minorSubject ?? null,
+        yearLevel: fullProfile?.yearLevel ?? null,
+        phoneNumber: fullProfile?.phoneNumber ?? null,
         role: normalizedRole,
       };
 
