@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
+import StudentReportPanel from './StudentReportPanel';
 
 const COLORS = {
   primary: '#003d7a', primaryLight: '#e8f0fb',
@@ -205,6 +206,9 @@ export default function StudentDashboard() {
           </div>
         </div>
 
+            {/* Student Report */}
+        <StudentReportPanel studentDbId={student?.id} />
+        
         {/* Book Catalog */}
         <div style={{ backgroundColor:COLORS.white, borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)', border:`1px solid ${COLORS.border}`, overflow:'hidden', marginBottom:24 }}>
           <div style={{ padding:'16px 24px', borderBottom:`1px solid ${COLORS.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>

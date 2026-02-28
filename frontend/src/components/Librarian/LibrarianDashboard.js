@@ -5,6 +5,7 @@ import { AuthContext } from '../../AuthContext';
 import librarianService from '../../services/librarianService';
 import studentService from '../../services/studentService';
 
+import ReportsPanel from './ReportsPanel';
 import BookManagement from '../Book/BookManagement';
 import CurrentCount from '../LibraryEntry/CurrentCount';
 import EntryList from '../LibraryEntry/EntryList';
@@ -25,6 +26,7 @@ export default function LibrarianDashboard() {
   const [studentsInside, setStudentsInside] = useState([]);
   const [studentList, setStudentList] = useState([]);
   const [selectedQR, setSelectedQR] = useState('ENTRY');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -136,7 +138,7 @@ export default function LibrarianDashboard() {
     <div style={{ padding: 20, fontFamily: "'Segoe UI', sans-serif", backgroundColor: '#f0f4f8', minHeight: '100vh' }}>
 
       {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:30, backgroundColor:COLORS.white, padding:'16px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, backgroundColor:COLORS.white, padding:'16px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           <span style={{ fontSize:'1.8em' }}>📚</span>
           <div>
@@ -150,6 +152,19 @@ export default function LibrarianDashboard() {
         </button>
       </div>
 
+      {/* Tab Navigation */}
+      <div style={{ display:'flex', gap:4, marginBottom:24, backgroundColor:COLORS.white, padding:'0 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)', borderBottom:`2px solid ${COLORS.border}` }}>
+        {[
+          { key:'dashboard', label:'📊 Dashboard' },
+          { key:'reports', label:'📈 Reports' },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+            style={{ padding:'14px 22px', border:'none', borderBottom: activeTab===tab.key ? `3px solid ${COLORS.primary}` : '3px solid transparent', backgroundColor:'transparent', cursor:'pointer', fontWeight:700, fontSize:'0.88em', color:activeTab===tab.key ? COLORS.primary : COLORS.gray, marginBottom:-2 }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Message */}
       {message && (
         <div style={{ marginBottom:20, padding:'12px 16px', color:message.type==='error'?COLORS.danger:COLORS.success, backgroundColor:message.type==='error'?COLORS.dangerLight:COLORS.successLight, border:`1px solid ${message.type==='error'?COLORS.danger:COLORS.success}`, borderRadius:6 }}>
@@ -158,57 +173,70 @@ export default function LibrarianDashboard() {
         </div>
       )}
 
-      {/* Current Students Inside */}
-      <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ color:COLORS.primary, marginTop:0 }}>📌 Current Students Inside</h3>
-        <button onClick={loadStudentsInside} disabled={loading}
-          style={{ padding:'7px 16px', backgroundColor:'#2196f3', color:'white', border:'none', borderRadius:5, cursor:loading?'not-allowed':'pointer', marginBottom:15, fontWeight:600 }}>
-          {loading ? 'Refreshing...' : '↻ Refresh'}
-        </button>
-        <CurrentCount
-          inside={studentsInside.filter(e => !e.exitTime).length}
-          left={studentsInside.filter(e => e.exitTime).length}
-        />
-        <EntryList entries={studentsInside} />
-      </section>
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && (
+        <div>
+          {/* Current Students Inside */}
+          <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h3 style={{ color:COLORS.primary, marginTop:0 }}>📌 Current Students Inside</h3>
+            <button onClick={loadStudentsInside} disabled={loading}
+              style={{ padding:'7px 16px', backgroundColor:'#2196f3', color:'white', border:'none', borderRadius:5, cursor:loading?'not-allowed':'pointer', marginBottom:15, fontWeight:600 }}>
+              {loading ? 'Refreshing...' : '↻ Refresh'}
+            </button>
+            <CurrentCount
+              inside={studentsInside.filter(e => !e.exitTime).length}
+              left={studentsInside.filter(e => e.exitTime).length}
+            />
+            <EntryList entries={studentsInside} />
+          </section>
 
-      {/* QR Code */}
-      <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ color:COLORS.primary, marginTop:0 }}>📱 QR Code for Students</h3>
-        <div style={{ marginBottom:15 }}>
-          <label style={{ fontWeight:600, color:COLORS.gray, fontSize:'0.9em' }}>Select Type: </label>
-          <select value={selectedQR} onChange={e => setSelectedQR(e.target.value)}
-            style={{ marginLeft:10, padding:'6px 12px', borderRadius:5, border:`1px solid ${COLORS.border}` }}>
-            <option value="ENTRY">Entry</option>
-            <option value="EXIT">Exit</option>
-          </select>
-        </div>
-        <div style={{ padding:20, backgroundColor:COLORS.grayLight, borderRadius:8, display:'inline-block' }}>
-          <QRCodeCanvas value={qrValue} size={200} />
-        </div>
-        <p style={{ marginTop:10, fontSize:'0.9em', color:COLORS.gray }}>
-          Show this QR code to students for {selectedQR === 'ENTRY' ? 'entry' : 'exit'} scanning.
-        </p>
-      </section>
+          {/* QR Code */}
+          <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h3 style={{ color:COLORS.primary, marginTop:0 }}>📱 QR Code for Students</h3>
+            <div style={{ marginBottom:15 }}>
+              <label style={{ fontWeight:600, color:COLORS.gray, fontSize:'0.9em' }}>Select Type: </label>
+              <select value={selectedQR} onChange={e => setSelectedQR(e.target.value)}
+                style={{ marginLeft:10, padding:'6px 12px', borderRadius:5, border:`1px solid ${COLORS.border}` }}>
+                <option value="ENTRY">Entry</option>
+                <option value="EXIT">Exit</option>
+              </select>
+            </div>
+            <div style={{ padding:20, backgroundColor:COLORS.grayLight, borderRadius:8, display:'inline-block' }}>
+              <QRCodeCanvas value={qrValue} size={200} />
+            </div>
+            <p style={{ marginTop:10, fontSize:'0.9em', color:COLORS.gray }}>
+              Show this QR code to students for {selectedQR === 'ENTRY' ? 'entry' : 'exit'} scanning.
+            </p>
+          </section>
 
-      {/* Student Management */}
-      <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ color:COLORS.primary, marginTop:0 }}>👨‍🎓 Student Management</h3>
-        <div style={{ marginBottom:12, padding:'10px 14px', backgroundColor:'#e3f2fd', borderRadius:6, fontSize:'0.88em', color:'#1565c0' }}>
-          ℹ️ Students appear here after self-registering. Select them in Book Management below to borrow or return books.
-        </div>
-        <button onClick={loadAllStudents}
-          style={{ padding:'7px 16px', backgroundColor:'#4caf50', color:'white', border:'none', borderRadius:5, cursor:'pointer', marginBottom:15, fontWeight:600 }}>
-          ↻ Reload Students
-        </button>
-        <StudentList students={studentList} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />
-      </section>
+          {/* Student Management */}
+          <section style={{ marginBottom:30, backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h3 style={{ color:COLORS.primary, marginTop:0 }}>👨‍🎓 Student Management</h3>
+            <div style={{ marginBottom:12, padding:'10px 14px', backgroundColor:'#e3f2fd', borderRadius:6, fontSize:'0.88em', color:'#1565c0' }}>
+              ℹ️ Students appear here after self-registering.
+            </div>
+            <button onClick={loadAllStudents}
+              style={{ padding:'7px 16px', backgroundColor:'#4caf50', color:'white', border:'none', borderRadius:5, cursor:'pointer', marginBottom:15, fontWeight:600 }}>
+              ↻ Reload Students
+            </button>
+            <StudentList students={studentList} onEdit={handleEditStudent} onDelete={handleDeleteStudent} />
+          </section>
 
-      {/* Book Management */}
-      <section style={{ backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ color:COLORS.primary, marginTop:0 }}>📖 Book Management</h3>
-        <BookManagement students={studentList} />
-      </section>
+          {/* Book Management */}
+          <section style={{ backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+            <h3 style={{ color:COLORS.primary, marginTop:0 }}>📖 Book Management</h3>
+            <BookManagement students={studentList} />
+          </section>
+        </div>
+      )}
+
+      {/* Reports Tab */}
+      {activeTab === 'reports' && (
+        <div style={{ backgroundColor:COLORS.white, padding:'20px 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }}>
+          <h3 style={{ color:COLORS.primary, marginTop:0 }}>📈 Library Reports & Analytics</h3>
+          <ReportsPanel />
+        </div>
+      )}
 
       {/* Edit Student Modal */}
       {editModalOpen && (
