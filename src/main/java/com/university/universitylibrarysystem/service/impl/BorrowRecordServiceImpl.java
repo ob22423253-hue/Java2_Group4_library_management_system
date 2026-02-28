@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,9 +37,10 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
 
     @Override
     public BorrowRecord borrowBook(Student student, Book book, int loanDays) {
-        // refresh entities
-        Student s = studentRepository.findById(student.getId()).orElseThrow(() -> new RuntimeException("Student not found"));
-        Book b = bookRepository.findById(book.getId()).orElseThrow(() -> new RuntimeException("Book not found"));
+        Student s = studentRepository.findById(student.getId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Book b = bookRepository.findById(book.getId())
+                .orElseThrow(() -> new RuntimeException("Book not found"));
 
         if (b.getAvailableCopies() <= 0) {
             throw new RuntimeException("No copies available for book: " + b.getId());
@@ -53,6 +56,7 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
         LocalDateTime now = LocalDateTime.now();
         record.setBorrowDate(now);
         record.setDueDate(now.plusDays(Math.max(1, loanDays)));
+        record.setFineAmount(0.0);
 
         return borrowRecordRepository.save(record);
     }
@@ -61,15 +65,59 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
     public BorrowRecord returnBook(Long borrowRecordId) {
         BorrowRecord record = borrowRecordRepository.findById(borrowRecordId)
                 .orElseThrow(() -> new RuntimeException("BorrowRecord not found: " + borrowRecordId));
+
         if (record.getReturnDate() != null) {
             return record; // already returned
         }
-        record.setReturnDate(LocalDateTime.now());
-        // update book availability
+
+        LocalDateTime now = LocalDateTime.now();
+        record.setReturnDate(now);
+
+        // Calculate fine if returned late
+        if (now.isAfter(record.getDueDate())) {
+            long daysLate = ChronoUnit.DAYS.between(record.getDueDate(), now);
+            if (daysLate < 1) daysLate = 1;
+            double fine = daysLate * 0.50;
+            record.setFineAmount(fine);
+            record.setStatus(BorrowRecord.BorrowStatus.OVERDUE);
+        } else {
+            record.setFineAmount(0.0);
+            record.setStatus(BorrowRecord.BorrowStatus.RETURNED);
+        }
+
+        // Restore book availability
         Book b = record.getBook();
         b.setAvailableCopies(b.getAvailableCopies() + 1);
         bookRepository.save(b);
+
         return borrowRecordRepository.save(record);
+    }
+
+    @Override
+    public BorrowRecord applyManualFine(Long borrowRecordId, double fineAmount, String reason) {
+        BorrowRecord record = borrowRecordRepository.findById(borrowRecordId)
+                .orElseThrow(() -> new RuntimeException("BorrowRecord not found: " + borrowRecordId));
+        record.setFineAmount(fineAmount);
+        if (reason != null && !reason.isBlank()) {
+            record.setNotes(reason);
+        }
+        return borrowRecordRepository.save(record);
+    }
+
+    @Override
+    public BorrowRecord markFinePaid(Long borrowRecordId) {
+        BorrowRecord record = borrowRecordRepository.findById(borrowRecordId)
+                .orElseThrow(() -> new RuntimeException("BorrowRecord not found: " + borrowRecordId));
+        record.setFineAmount(0.0);
+        record.setNotes(
+            (record.getNotes() != null ? record.getNotes() + " | " : "") + "Fine paid"
+        );
+        return borrowRecordRepository.save(record);
+    }
+
+    @Override
+    public List<BorrowRecord> findRecordsWithFines() {
+        return borrowRecordRepository.findRecordsWithFines();
     }
 
     @Override
@@ -78,7 +126,7 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
     }
 
     @Override
-    public java.util.List<BorrowRecord> findActiveBorrowsByStudent(Student student) {
+    public List<BorrowRecord> findActiveBorrowsByStudent(Student student) {
         return borrowRecordRepository.findByStudentAndReturnDateIsNull(student);
     }
 

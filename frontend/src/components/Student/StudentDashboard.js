@@ -161,21 +161,7 @@ export default function StudentDashboard() {
         {/* Announcements */}
         <AnnouncementList />
 
-        {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:16, marginBottom:28 }}>
-          {[
-            { label:'Total Borrowed', value:allBorrows.length, color:COLORS.primary, bg:COLORS.primaryLight, icon:'📚' },
-            { label:'Currently Out', value:activeCount, color:'#1565c0', bg:'#e3f2fd', icon:'📤' },
-            { label:'Overdue', value:overdueCount, color:COLORS.danger, bg:COLORS.dangerLight, icon:'⚠️' },
-            { label:'Returned', value:returnedCount, color:COLORS.success, bg:COLORS.successLight, icon:'✅' },
-          ].map(card => (
-            <div key={card.label} style={{ backgroundColor:card.bg, borderRadius:10, padding:'18px 20px', border:`1px solid ${card.color}22` }}>
-              <div style={{ fontSize:'1.6em', marginBottom:4 }}>{card.icon}</div>
-              <div style={{ fontSize:'1.8em', fontWeight:800, color:card.color }}>{card.value}</div>
-              <div style={{ fontSize:'0.82em', color:COLORS.gray, fontWeight:500 }}>{card.label}</div>
-            </div>
-          ))}
-        </div>
+        
 
         {/* Profile */}
         <div style={{ backgroundColor:COLORS.white, borderRadius:10, padding:'20px 24px', marginBottom:24, boxShadow:'0 1px 4px rgba(0,0,0,0.08)', border:`1px solid ${COLORS.border}` }}>

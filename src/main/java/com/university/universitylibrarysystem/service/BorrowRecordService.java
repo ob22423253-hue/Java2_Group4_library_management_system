@@ -7,20 +7,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
-/**
- * Service contract for managing borrow/return operations.
- */
 public interface BorrowRecordService {
 
     BorrowRecord borrowBook(Student student, Book book, int loanDays);
 
     BorrowRecord returnBook(Long borrowRecordId);
 
+    BorrowRecord applyManualFine(Long borrowRecordId, double fineAmount, String reason);
+
+    BorrowRecord markFinePaid(Long borrowRecordId);
+
+    List<BorrowRecord> findRecordsWithFines();
+
     Optional<BorrowRecord> findActiveBorrowForBook(Book book);
 
-    java.util.List<BorrowRecord> findActiveBorrowsByStudent(Student student);
+    List<BorrowRecord> findActiveBorrowsByStudent(Student student);
 
     Page<BorrowRecord> findByStudent(Student student, Pageable pageable);
 

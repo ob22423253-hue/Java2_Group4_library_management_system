@@ -177,4 +177,43 @@ public class BorrowRecordController {
             return ResponseHandler.generateResponse("Error retrieving active borrow: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
+    @PutMapping("/{borrowRecordId}/fine")
+    public ResponseEntity<Object> applyFine(
+            @PathVariable Long borrowRecordId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            double amount = Double.parseDouble(body.getOrDefault("fineAmount", 0).toString());
+            String reason = body.getOrDefault("reason", "").toString();
+            BorrowRecord updated = borrowRecordService.applyManualFine(borrowRecordId, amount, reason);
+            return ResponseHandler.generateResponse("Fine applied successfully", HttpStatus.OK, toSafeMap(updated));
+        } catch (IllegalArgumentException e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.NOT_FOUND, null);
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse("Error applying fine: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    @PutMapping("/{borrowRecordId}/fine/paid")
+    public ResponseEntity<Object> markFinePaid(@PathVariable Long borrowRecordId) {
+        try {
+            BorrowRecord updated = borrowRecordService.markFinePaid(borrowRecordId);
+            return ResponseHandler.generateResponse("Fine marked as paid", HttpStatus.OK, toSafeMap(updated));
+        } catch (IllegalArgumentException e) {
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.NOT_FOUND, null);
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse("Error marking fine paid: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    @GetMapping("/fines")
+    public ResponseEntity<Object> getAllFines() {
+        try {
+            List<BorrowRecord> records = borrowRecordService.findRecordsWithFines();
+            List<Map<String, Object>> safe = records.stream()
+                    .map(this::toSafeMap).collect(Collectors.toList());
+            return ResponseHandler.generateResponse("Fine records retrieved", HttpStatus.OK, safe);
+        } catch (Exception e) {
+            return ResponseHandler.generateResponse("Error retrieving fines: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
+    }
 }
