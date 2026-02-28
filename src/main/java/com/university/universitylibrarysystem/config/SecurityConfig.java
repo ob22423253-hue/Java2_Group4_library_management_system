@@ -46,6 +46,14 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/error").permitAll()
+
+                // Library status — both students and librarians can check
+                .requestMatchers("/library-hours/status").hasAnyAuthority("ROLE_STUDENT", "ROLE_LIBRARIAN", "ROLE_ADMIN")
+                .requestMatchers("/library-hours").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+                // Announcements — students can read active, librarians can manage
+                .requestMatchers(HttpMethod.GET, "/announcements").hasAnyAuthority("ROLE_STUDENT", "ROLE_LIBRARIAN", "ROLE_ADMIN")
+                .requestMatchers("/announcements/**").hasAnyAuthority("ROLE_LIBRARIAN", "ROLE_ADMIN")
+
                 // Student scan
                 .requestMatchers("/scan").hasAuthority("ROLE_STUDENT")
                 // Librarian-only endpoints

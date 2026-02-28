@@ -6,6 +6,7 @@ import com.university.universitylibrarysystem.entity.LibraryEntry;
 import com.university.universitylibrarysystem.entity.Student;
 import com.university.universitylibrarysystem.repository.LibraryEntryRepository;
 import com.university.universitylibrarysystem.repository.StudentRepository;
+import com.university.universitylibrarysystem.service.LibraryHoursService;
 import com.university.universitylibrarysystem.util.ResponseHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,11 +28,19 @@ public class ScanController {
 
     private final LibraryEntryRepository libraryEntryRepository;
     private final StudentRepository studentRepository;
+    private final LibraryHoursService libraryHoursService;
 
     @Transactional
     @PostMapping("/scan")
     public ResponseEntity<Object> scan(@RequestBody(required = false) ScanRequestDTO request) {
         try {
+            // Block scanning if library is closed
+            if (!libraryHoursService.isLibraryOpen()) {
+                return ResponseHandler.generateResponse(
+                        "Library is currently closed. Scanning is not allowed.",
+                        HttpStatus.FORBIDDEN, null);
+            }
+
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth == null || auth.getName() == null) {
                 return ResponseHandler.generateResponse("Unauthorized", HttpStatus.UNAUTHORIZED, null);

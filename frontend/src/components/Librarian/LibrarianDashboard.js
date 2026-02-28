@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
 import librarianService from '../../services/librarianService';
 import studentService from '../../services/studentService';
+import AnnouncementPanel from './AnnouncementPanel';
+import LibraryHoursPanel from './LibraryHoursPanel';
 
 import ReportsPanel from './ReportsPanel';
 import BookManagement from '../Book/BookManagement';
@@ -156,6 +158,8 @@ export default function LibrarianDashboard() {
       <div style={{ display:'flex', gap:4, marginBottom:24, backgroundColor:COLORS.white, padding:'0 24px', borderRadius:10, boxShadow:'0 1px 4px rgba(0,0,0,0.08)', borderBottom:`2px solid ${COLORS.border}` }}>
         {[
           { key:'dashboard', label:'📊 Dashboard' },
+          { key:'announcements', label:'📢 Announcements' },
+          { key:'hours', label:'🕐 Library Hours' },
           { key:'reports', label:'📈 Reports' },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -163,6 +167,19 @@ export default function LibrarianDashboard() {
             {tab.label}
           </button>
         ))}
+        {activeTab === 'announcements' && (
+  <div style={{ backgroundColor: COLORS.white, padding: '20px 24px', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+    <h3 style={{ color: COLORS.primary, marginTop: 0 }}>📢 Announcements</h3>
+    <AnnouncementPanel />
+  </div>
+)}
+
+{activeTab === 'hours' && (
+  <div style={{ backgroundColor: COLORS.white, padding: '20px 24px', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+    <h3 style={{ color: COLORS.primary, marginTop: 0 }}>🕐 Library Hours & Working Days</h3>
+    <LibraryHoursPanel />
+  </div>
+)}
       </div>
 
       {/* Message */}

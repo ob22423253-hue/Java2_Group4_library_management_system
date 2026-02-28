@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS library_hours (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    librarian_id BIGINT NOT NULL,
+    open_time TIME NOT NULL,
+    close_time TIME NOT NULL,
+    working_days VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (librarian_id) REFERENCES librarians(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS announcements (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    librarian_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL,
+    FOREIGN KEY (librarian_id) REFERENCES librarians(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

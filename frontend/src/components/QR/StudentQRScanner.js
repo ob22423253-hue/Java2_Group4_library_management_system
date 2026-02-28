@@ -111,9 +111,12 @@ export default function StudentQRScanner({ scanType = 'ENTRY' }) {
             } else if (isMountedRef.current) {
               console.error('[StudentQRScanner] Scan failed:', data);
               setMessage({
-                type: 'error',
-                text: `Scan failed: ${data.message || 'Unknown error'}`,
-              });
+  type: 'error',
+  text: response.status === 403
+    ? '🔴 Library is currently closed. Scanning is not allowed.'
+    : `Scan failed: ${data.message || 'Unknown error'}`,
+});
+              
               if (scanner) {
                 try {
                   await scanner.resume();

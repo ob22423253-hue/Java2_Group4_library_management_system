@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
 import StudentReportPanel from './StudentReportPanel';
+import LibraryStatusBanner from './LibraryStatusBanner';
+import AnnouncementList from './AnnouncementList';
 
 const COLORS = {
   primary: '#003d7a', primaryLight: '#e8f0fb',
@@ -152,6 +154,12 @@ export default function StudentDashboard() {
       </div>
 
       <div style={{ maxWidth:1000, margin:'0 auto', padding:'28px 20px' }}>
+
+        {/* Library Status */}
+        <LibraryStatusBanner />
+
+        {/* Announcements */}
+        <AnnouncementList />
 
         {/* Stats */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:16, marginBottom:28 }}>
